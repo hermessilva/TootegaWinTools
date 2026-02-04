@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  SevenZipView Windows Installer Package
+  SQLiteView Windows Installer Package
   Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
   
   This installer:
-  - Installs SevenZipView.dll to Program Files\Tootega
+  - Installs SQLiteView.dll to Program Files\Tootega\SQLiteView
   - Registers the COM DLL (shell extension)
   - Requires Administrator elevation
   - Supports Install/Uninstall/Repair
@@ -13,10 +13,10 @@
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <!-- Product Information -->
-  <Package Name="SevenZipView"
+  <Package Name="SQLiteView"
            Manufacturer="Tootega Pesquisa e Inovacao"
            Version="1.0.0.0"
-           UpgradeCode="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C5F"
+           UpgradeCode="034DE3FC-502C-4E3C-B83C-D219F434FC8E"
            Scope="perMachine"
            Language="1033"
            Compressed="yes"
@@ -35,12 +35,12 @@
             Message="Administrator privileges are required to install this application." />
 
     <!-- Summary Information -->
-    <SummaryInformation Description="SevenZipView - Windows Explorer Shell Extension for 7-Zip Archives"
-                        Keywords="7zip,archive,shell,extension"
+    <SummaryInformation Description="SQLiteView - Windows Explorer Shell Extension for SQLite Databases"
+                        Keywords="sqlite,database,shell,extension"
                         Manufacturer="Tootega Pesquisa e Inovacao" />
 
     <!-- Media / Compression -->
-    <Media Id="1" Cabinet="SevenZipView.cab" EmbedCab="yes" CompressionLevel="high" />
+    <Media Id="1" Cabinet="SQLiteView.cab" EmbedCab="yes" CompressionLevel="high" />
 
     <!-- Upgrade handling - allows upgrade/downgrade -->
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
@@ -48,10 +48,10 @@
                   Schedule="afterInstallInitialize" />
 
     <!-- Custom Icon for Add/Remove Programs -->
-    <Icon Id="ProductIcon" SourceFile="Resources\SevenZipView.ico" />
+    <Icon Id="ProductIcon" SourceFile="Resources\database.ico" />
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/tootega/7ZipShell" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/tootega/7ZipShell/releases" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/tootega/SQLiteShell" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/tootega/SQLiteShell/releases" />
     <Property Id="ARPNOMODIFY" Value="yes" />
 
     <!-- ================================================================ -->
@@ -59,7 +59,7 @@
     <!-- ================================================================ -->
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Tootega">
-        <Directory Id="PRODUCTFOLDER" Name="SevenZipView" />
+        <Directory Id="PRODUCTFOLDER" Name="SQLiteView" />
       </Directory>
     </StandardDirectory>
 
@@ -69,20 +69,20 @@
     <ComponentGroup Id="ProductComponents" Directory="PRODUCTFOLDER">
       
       <!-- Main DLL - Self-registering COM component -->
-      <Component Id="SevenZipViewDLL" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C60" Win64="yes">
-        <File Id="SevenZipView.dll" 
-              Name="SevenZipView.dll" 
-              Source="..\x64\Release\SevenZipView.dll"
+      <Component Id="SQLiteViewDLL" Guid="9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F" Win64="yes">
+        <File Id="SQLiteView.dll" 
+              Name="SQLiteView.dll" 
+              Source="..\x64\Release\SQLiteView.dll"
               KeyPath="yes"
               SelfRegCost="1"
               Vital="yes" />
       </Component>
 
       <!-- PDB file (optional, for debugging) -->
-      <Component Id="SevenZipViewPDB" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C61" Win64="yes">
-        <File Id="SevenZipView.pdb" 
-              Name="SevenZipView.pdb" 
-              Source="..\x64\Release\SevenZipView.pdb"
+      <Component Id="SQLiteViewPDB" Guid="AC1D2E3F-4B5C-6D7E-8F9A-0B1C2D3E4F5A" Win64="yes">
+        <File Id="SQLiteView.pdb" 
+              Name="SQLiteView.pdb" 
+              Source="..\x64\Release\SQLiteView.pdb"
               KeyPath="yes" />
         <Condition>INSTALLPDB</Condition>
       </Component>
@@ -93,8 +93,8 @@
     <!-- Features                                                          -->
     <!-- ================================================================ -->
     <Feature Id="ProductFeature" 
-             Title="SevenZipView Shell Extension" 
-             Description="Windows Explorer integration for 7-Zip archives"
+             Title="SQLiteView Shell Extension" 
+             Description="Windows Explorer integration for SQLite databases"
              Level="1"
              ConfigurableDirectory="INSTALLFOLDER"
              AllowAdvertise="no"
@@ -131,14 +131,6 @@
                   Impersonate="no"
                   Return="ignore" />
 
-    <!-- Notify Shell of changes (refresh icons) -->
-    <CustomAction Id="NotifyShell"
-                  BinaryRef="CustomActionDll"
-                  DllEntry="NotifyShellChange"
-                  Execute="deferred"
-                  Impersonate="no"
-                  Return="ignore" />
-
     <!-- ================================================================ -->
     <!-- Install Sequence                                                  -->
     <!-- ================================================================ -->
@@ -151,7 +143,7 @@
         NOT UPGRADINGPRODUCTCODE
       </Custom>
       
-      <!-- Restart Explorer and notify shell after install -->
+      <!-- Restart Explorer after install -->
       <Custom Action="StartExplorer" After="InstallFinalize">
         NOT UPGRADINGPRODUCTCODE
       </Custom>
@@ -174,7 +166,7 @@
 
     <!-- Custom UI for Install/Uninstall detection -->
     <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" 
-              Value="SevenZipView has been successfully installed. You may need to restart Windows Explorer or log off for changes to take full effect." />
+              Value="SQLiteView has been successfully installed. You may need to restart Windows Explorer or log off for changes to take full effect." />
 
   </Package>
 </Wix>

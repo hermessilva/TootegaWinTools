@@ -32,7 +32,7 @@ private:
     DatabasePool(const DatabasePool&) = delete;
     DatabasePool& operator=(const DatabasePool&) = delete;
     
-    std::mutex _Mutex;
+    std::recursive_mutex _Mutex;
     std::unordered_map<std::wstring, std::weak_ptr<Database>> _Databases;
 };
 
@@ -91,6 +91,11 @@ public:
                                           INT64 offset = 0, 
                                           INT64 limit = 1000) const;
     
+    // Get record IDs only (lightweight for enumeration)
+    std::vector<DatabaseEntry> GetRecordIDsOnly(const std::wstring& tableName, 
+                                                 INT64 offset = 0, 
+                                                 INT64 limit = 1000) const;
+    
     // Get a single record by rowid
     DatabaseEntry GetRecordByRowID(const std::wstring& tableName, INT64 rowid) const;
     
@@ -137,7 +142,7 @@ private:
     std::wstring        _Path;
     sqlite3*            _DB;
     
-    mutable std::mutex  _Mutex;
+    mutable std::recursive_mutex  _Mutex;
     
     // Caches
     mutable std::unordered_map<std::wstring, INT64> _RecordCountCache;

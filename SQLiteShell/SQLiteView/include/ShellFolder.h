@@ -148,6 +148,10 @@ private:
     // Column cache for current table (for dynamic columns)
     mutable std::vector<ColumnInfo> _CurrentColumns;
     mutable bool _ColumnsLoaded;
+    
+    // Record cache for GetDetailsOf - avoids repeated DB queries
+    mutable std::unordered_map<INT64, DatabaseEntry> _RecordCache;
+    mutable INT64 _LastCachedRowID;
 
     static const ItemData* GetItemData(PCUITEMID_CHILD pidl);
     PITEMID_CHILD CreateItemID(const DatabaseEntry& entry);
@@ -157,6 +161,7 @@ private:
                                FILETIME mtime);
     bool OpenDatabase();
     void LoadColumns() const;
+    const DatabaseEntry* GetCachedRecord(INT64 rowid) const;
     
     // Dynamic column support - columns change based on current table
     UINT GetColumnCount() const;

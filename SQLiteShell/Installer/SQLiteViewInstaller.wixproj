@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SevenZipView MSI Installer Project
+  SQLiteView MSI Installer Project
   Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
   
   Build: dotnet build -c Release
-  Output: bin\Release\SevenZipViewInstaller.msi
+  Output: bin\Release\SQLiteViewInstaller.msi
 -->
 <Project Sdk="WixToolset.Sdk/5.0.0">
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <InstallerPlatform>x64</InstallerPlatform>
-    <OutputName>SevenZipViewInstaller</OutputName>
+    <OutputName>SQLiteViewInstaller</OutputName>
     <DefaultLanguage>en-US</DefaultLanguage>
   </PropertyGroup>
 
   <!-- Reference to the main DLL project output -->
   <ItemGroup>
-    <ProjectReference Include="..\SevenZipView\SevenZipView.vcxproj">
+    <ProjectReference Include="..\SQLiteView\SQLiteView.vcxproj">
       <Properties>Configuration=$(Configuration);Platform=x64</Properties>
     </ProjectReference>
   </ItemGroup>

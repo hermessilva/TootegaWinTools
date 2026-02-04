@@ -65,11 +65,11 @@ try {
     
     $keysToDelete = @(
         "HKCU:\Software\Classes\SQLiteView.Database",
-        "HKCU:\Software\Classes\CLSID\{8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E}",
-        "HKCU:\Software\Classes\CLSID\{9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F}",
-        "HKCU:\Software\Classes\CLSID\{0D1E2F3A-4B5C-6D7E-8F9A-0B1C2D3E4F5A}",
-        "HKCU:\Software\Classes\CLSID\{1E2F3A4B-5C6D-7E8F-9A0B-1C2D3E4F5A6B}",
-        "HKCU:\Software\Classes\CLSID\{2F3A4B5C-6D7E-8F9A-0B1C-2D3E4F5A6B7C}"
+        "HKCU:\Software\Classes\CLSID\{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}",
+        "HKCU:\Software\Classes\CLSID\{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}",
+        "HKCU:\Software\Classes\CLSID\{C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F}",
+        "HKCU:\Software\Classes\CLSID\{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A}",
+        "HKCU:\Software\Classes\CLSID\{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}"
     )
     
     $extensions = @(".db", ".sqlite", ".sqlite3", ".db3")
@@ -77,6 +77,7 @@ try {
         $keysToDelete += "HKCU:\Software\Classes\$ext\ShellEx"
         $keysToDelete += "HKCU:\Software\Classes\$ext\SQLiteView.Database"
         $keysToDelete += "HKCU:\Software\Classes\$ext\OpenWithProgids"
+        $keysToDelete += "HKCU:\Software\Classes\SystemFileAssociations\$ext"
     }
     
     foreach ($key in $keysToDelete) {
@@ -93,6 +94,8 @@ try {
             $currentProgId = (Get-ItemProperty -Path $extPath -ErrorAction SilentlyContinue).'(default)'
             if ($currentProgId -eq "SQLiteView.Database") {
                 Remove-ItemProperty -Path $extPath -Name "(default)" -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $extPath -Name "PerceivedType" -ErrorAction SilentlyContinue
+                Remove-ItemProperty -Path $extPath -Name "Content Type" -ErrorAction SilentlyContinue
                 Write-Host "    Reset $ext default association" -ForegroundColor Gray
             }
         }
@@ -102,11 +105,11 @@ try {
     $approvedPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
     if (Test-Path $approvedPath) {
         $clsids = @(
-            "{8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E}",
-            "{9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F}",
-            "{0D1E2F3A-4B5C-6D7E-8F9A-0B1C2D3E4F5A}",
-            "{1E2F3A4B-5C6D-7E8F-9A0B-1C2D3E4F5A6B}",
-            "{2F3A4B5C-6D7E-8F9A-0B1C-2D3E4F5A6B7C}"
+            "{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}",
+            "{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}",
+            "{C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F}",
+            "{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A}",
+            "{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}"
         )
         foreach ($clsid in $clsids) {
             Remove-ItemProperty -Path $approvedPath -Name $clsid -ErrorAction SilentlyContinue

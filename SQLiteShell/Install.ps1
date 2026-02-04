@@ -97,7 +97,7 @@ try {
     Start-Sleep -Seconds 1
     
     # Verify registration
-    $clsidPath = "HKCU:\Software\Classes\CLSID\{8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E}"
+    $clsidPath = "HKCU:\Software\Classes\CLSID\{A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D}"
     if (Test-Path $clsidPath) {
         Write-Host "    [OK] CLSID registered" -ForegroundColor Green
     } else {
@@ -109,7 +109,8 @@ try {
     foreach ($ext in $extensions) {
         $extPath = "HKCU:\Software\Classes\$ext"
         if (Test-Path $extPath) {
-            Write-Host "    [OK] $ext registered" -ForegroundColor Green
+            $progId = (Get-ItemProperty -Path $extPath -ErrorAction SilentlyContinue).'(default)'
+            Write-Host "    [OK] $ext -> $progId" -ForegroundColor Green
         }
     }
 

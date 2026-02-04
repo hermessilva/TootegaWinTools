@@ -9,13 +9,15 @@
 
 #include "Common.h"
 #include "Database.h"
+#include "ShellFolder.h"
 
 namespace SQLiteView {
 
 // Context Menu Handler - Right-click menu for database files and items
 class ContextMenuHandler : 
     public IContextMenu3,
-    public IShellExtInit {
+    public IShellExtInit,
+    public IObjectWithSite {
 public:
     ContextMenuHandler();
     virtual ~ContextMenuHandler();
@@ -41,13 +43,25 @@ public:
     // IShellExtInit
     STDMETHODIMP Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject* pdtobj, HKEY hkeyProgID) override;
 
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown* pUnkSite) override;
+    STDMETHODIMP GetSite(REFIID riid, void** ppvSite) override;
+
+    // Configuration for navigation support
+    void SetFolderPIDL(PCIDLIST_ABSOLUTE pidl) { _FolderPIDL = pidl ? ILCloneFull(pidl) : nullptr; }
+    void SetItemInfo(const std::wstring& name, ItemType type) { _ItemName = name; _ItemType = type; }
+
 private:
     LONG _RefCount;
     std::wstring _FilePath;
     std::wstring _TableName;
+    std::wstring _ItemName;
+    ItemType _ItemType = ItemType::Unknown;
     std::vector<INT64> _SelectedRowIDs;
     std::shared_ptr<Database> _Database;
     UINT _FirstCmdID;
+    IUnknown* _Site = nullptr;
+    PIDLIST_ABSOLUTE _FolderPIDL = nullptr;
 
     enum CommandID {
         CMD_OPEN = 0,
@@ -73,6 +87,7 @@ private:
     void DoIntegrityCheck(HWND hwnd);
     void DoAnalyze(HWND hwnd);
     void DoProperties(HWND hwnd);
+    bool NavigateToTable(HWND hwnd);
 };
 
 } // namespace SQLiteView

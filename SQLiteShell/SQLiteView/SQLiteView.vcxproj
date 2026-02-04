@@ -15,7 +15,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -24,16 +23,13 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>SQLiteView</ProjectName>
   </PropertyGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -41,22 +37,18 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
   <PropertyGroup Label="UserMacros" />
-
   <!-- Output Directories -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -70,7 +62,6 @@
     <TargetName>SQLiteView</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
-
   <!-- Debug Configuration -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,7 +84,6 @@
       <AdditionalDependencies>$(ProjectDir)..\..\x64\$(Configuration)\TootegaWinLib.lib;shlwapi.lib;ole32.lib;oleaut32.lib;uuid.lib;shell32.lib;propsys.lib;gdi32.lib;user32.lib;advapi32.lib;comctl32.lib;uxtheme.lib;dwmapi.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-
   <!-- Release Configuration -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -121,7 +111,6 @@
       <AdditionalDependencies>$(ProjectDir)..\..\x64\$(Configuration)\TootegaWinLib.lib;shlwapi.lib;ole32.lib;oleaut32.lib;uuid.lib;shell32.lib;propsys.lib;gdi32.lib;user32.lib;advapi32.lib;comctl32.lib;uxtheme.lib;dwmapi.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-
   <!-- SQLite Amalgamation Source -->
   <ItemGroup>
     <ClCompile Include="sqlite3\sqlite3.c">
@@ -130,7 +119,6 @@
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
   </ItemGroup>
-
   <!-- SQLiteView Source Files -->
   <ItemGroup>
     <ClCompile Include="src\DllMain.cpp" />
@@ -141,7 +129,6 @@
     <ClCompile Include="src\Shell\PropertyHandler.cpp" />
     <ClCompile Include="src\Shell\IconHandler.cpp" />
   </ItemGroup>
-
   <!-- Header Files -->
   <ItemGroup>
     <ClInclude Include="include\Common.h" />
@@ -153,32 +140,27 @@
     <ClInclude Include="include\PropertyHandler.h" />
     <ClInclude Include="include\IconHandler.h" />
   </ItemGroup>
-
   <!-- SQLite Headers -->
   <ItemGroup>
     <ClInclude Include="sqlite3\sqlite3.h" />
     <ClInclude Include="sqlite3\sqlite3ext.h" />
   </ItemGroup>
-
   <!-- Resource Files -->
   <ItemGroup>
     <ResourceCompile Include="resources\SQLiteView.rc">
       <AdditionalIncludeDirectories>$(ProjectDir)resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
-
   <!-- Module Definition -->
   <ItemGroup>
     <None Include="SQLiteView.def" />
   </ItemGroup>
-
   <!-- Other Files -->
   <ItemGroup>
     <None Include="README.md" />
     <None Include="Install.ps1" />
     <None Include="CMakeLists.txt" />
   </ItemGroup>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

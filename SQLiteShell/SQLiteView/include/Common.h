@@ -193,9 +193,32 @@ inline std::wstring FormatSQLiteValue(sqlite3_stmt* stmt, int col) {
 }
 
 // Debug logging - set to 1 to enable detailed logging to file
-#define SQLITEVIEW_ENABLE_LOG 0
+// WARNING: Logging with file I/O can cause Explorer freezes due to thread contention
+// Only enable for debugging, disable for production
+#define SQLITEVIEW_ENABLE_LOG 1
+
+// Build version - INCREMENT THIS BEFORE EACH BUILD
+#define SQLITEVIEW_BUILD_VERSION 19
 
 #if SQLITEVIEW_ENABLE_LOG
+
+// Log file path
+#define SQLITEVIEW_LOG_PATH "D:\\Tootega\\Source\\Tools\\Temp\\SQLiteView.log"
+
+// Global mutex for thread-safe logging
+inline std::mutex& GetLogMutex() {
+    static std::mutex logMutex;
+    return logMutex;
+}
+
+// Global flag to track if header was written
+inline bool& GetHeaderWritten() {
+    static bool headerWritten = false;
+    return headerWritten;
+}
+
+// Simple logging function - opens file, writes, closes every time
+// This is slower but guarantees no data loss on crash
 inline void SQLiteViewLog(const wchar_t* fmt, ...) {
     wchar_t buffer[2048];
     va_list args;
@@ -208,21 +231,40 @@ inline void SQLiteViewLog(const wchar_t* fmt, ...) {
     OutputDebugStringW(buffer);
     OutputDebugStringW(L"\n");
     
-    // Write to log file
-    static bool firstWrite = true;
-    const wchar_t* logPath = L"D:\\Tootega\\Source\\TootegaTools\\SQLiteView.log";
+    // Thread-safe file logging - open/write/close each time
+    std::lock_guard<std::mutex> lock(GetLogMutex());
     
-    FILE* f = nullptr;
-    _wfopen_s(&f, logPath, firstWrite ? L"w" : L"a");
-    if (f) {
+    FILE* logFile = nullptr;
+    
+    // Write header on first call, then append
+    if (!GetHeaderWritten()) {
+        fopen_s(&logFile, SQLITEVIEW_LOG_PATH, "w");
+        if (logFile) {
+            fprintf(logFile, "========================================\n");
+            fprintf(logFile, "SQLiteView Debug Log - Build Version %d\n", SQLITEVIEW_BUILD_VERSION);
+            fprintf(logFile, "========================================\n");
+            fclose(logFile);
+            logFile = nullptr;
+            GetHeaderWritten() = true;
+        }
+    }
+    
+    // Append log line
+    fopen_s(&logFile, SQLITEVIEW_LOG_PATH, "a");
+    if (logFile) {
         SYSTEMTIME st;
         GetLocalTime(&st);
-        fwprintf(f, L"[%02d:%02d:%02d.%03d] %s\n", 
-                 st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, buffer);
-        fclose(f);
-        firstWrite = false;
+        DWORD tid = GetCurrentThreadId();
+        
+        char utf8Buffer[4096];
+        WideCharToMultiByte(CP_UTF8, 0, buffer, -1, utf8Buffer, sizeof(utf8Buffer), nullptr, nullptr);
+        
+        fprintf(logFile, "[%02d:%02d:%02d.%03d] [TID:%05lu] %s\n", 
+                st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, tid, utf8Buffer);
+        fclose(logFile);
     }
 }
+
 #define SQLITEVIEW_LOG(fmt, ...) SQLiteViewLog(fmt, __VA_ARGS__)
 #else
 #define SQLITEVIEW_LOG(fmt, ...) ((void)0)

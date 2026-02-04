@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** SQLiteView - Windows Explorer Shell Extension for SQLite Databases
 ** SQLite Database Reader Implementation
 */
@@ -15,7 +15,7 @@ DatabasePool& DatabasePool::Instance() {
 }
 
 std::shared_ptr<Database> DatabasePool::GetDatabase(const std::wstring& path) {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     auto it = _Databases.find(path);
     if (it != _Databases.end()) {
@@ -33,12 +33,12 @@ std::shared_ptr<Database> DatabasePool::GetDatabase(const std::wstring& path) {
 }
 
 void DatabasePool::Remove(const std::wstring& path) {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     _Databases.erase(path);
 }
 
 void DatabasePool::Clear() {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     _Databases.clear();
 }
 
@@ -54,7 +54,9 @@ Database::~Database() {
 }
 
 bool Database::Open(const std::wstring& path) {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    SQLITEVIEW_LOG(L"Database::Open acquiring lock for: %s", path.c_str());
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
+    SQLITEVIEW_LOG(L"Database::Open lock acquired");
     
     if (_DB) Close();
     
@@ -168,6 +170,8 @@ INT64 Database::GetPragmaInt(const char* pragma) const {
 }
 
 void Database::BuildTableCache() const {
+    // Note: Caller should hold lock, or use recursive_mutex
+    SQLITEVIEW_LOG(L"BuildTableCache: built=%d", _TableCacheBuilt ? 1 : 0);
     if (_TableCacheBuilt || !_DB) return;
     
     _TableCache.clear();
@@ -211,7 +215,7 @@ void Database::BuildTableCache() const {
 }
 
 std::vector<TableInfo> Database::GetTables(bool includeSystem) const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     BuildTableCache();
     
@@ -227,7 +231,7 @@ std::vector<TableInfo> Database::GetTables(bool includeSystem) const {
 }
 
 std::vector<TableInfo> Database::GetViews() const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     BuildTableCache();
     
@@ -242,7 +246,7 @@ std::vector<TableInfo> Database::GetViews() const {
 }
 
 std::vector<std::pair<std::wstring, std::wstring>> Database::GetIndexes() const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     std::vector<std::pair<std::wstring, std::wstring>> result;
     if (!_DB) return result;
@@ -268,7 +272,7 @@ std::vector<std::pair<std::wstring, std::wstring>> Database::GetIndexes() const 
 }
 
 std::vector<std::pair<std::wstring, std::wstring>> Database::GetTriggers() const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     std::vector<std::pair<std::wstring, std::wstring>> result;
     if (!_DB) return result;
@@ -294,7 +298,7 @@ std::vector<std::pair<std::wstring, std::wstring>> Database::GetTriggers() const
 }
 
 TableInfo Database::GetTableInfo(const std::wstring& tableName) const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     BuildTableCache();
     
@@ -308,6 +312,8 @@ TableInfo Database::GetTableInfo(const std::wstring& tableName) const {
 }
 
 std::vector<ColumnInfo> Database::GetColumns(const std::wstring& tableName) const {
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
+    
     std::vector<ColumnInfo> result;
     if (!_DB) return result;
     
@@ -349,7 +355,7 @@ std::vector<ColumnInfo> Database::GetColumns(const std::wstring& tableName) cons
 }
 
 INT64 Database::GetRecordCount(const std::wstring& tableName) const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     // Check cache
     auto it = _RecordCountCache.find(tableName);
@@ -380,6 +386,9 @@ INT64 Database::GetRecordCount(const std::wstring& tableName) const {
 }
 
 std::vector<DatabaseEntry> Database::GetEntriesInFolder(const std::wstring& folderPath) const {
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
+    SQLITEVIEW_LOG(L"GetEntriesInFolder: path='%s'", folderPath.c_str());
+    
     std::vector<DatabaseEntry> entries;
     
     if (!_DB) return entries;
@@ -407,8 +416,8 @@ std::vector<DatabaseEntry> Database::GetEntriesInFolder(const std::wstring& fold
             entries.push_back(std::move(entry));
         }
     } else {
-        // Inside a table - return records as files
-        entries = GetRecords(folderPath, 0, 10000); // Limit for performance
+        // Inside a table - return only record IDs (lightweight)
+        entries = GetRecordIDsOnly(folderPath, 0, 10000);
     }
     
     return entries;
@@ -509,13 +518,65 @@ std::vector<DatabaseEntry> Database::GetRecords(const std::wstring& tableName,
     return entries;
 }
 
+std::vector<DatabaseEntry> Database::GetRecordIDsOnly(const std::wstring& tableName, 
+                                                       INT64 offset, 
+                                                       INT64 limit) const {
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
+    SQLITEVIEW_LOG(L"GetRecordIDsOnly: table='%s' offset=%lld limit=%lld", tableName.c_str(), offset, limit);
+    
+    std::vector<DatabaseEntry> entries;
+    
+    if (!_DB) return entries;
+    
+    auto columns = GetColumns(tableName);
+    INT64 colCount = static_cast<INT64>(columns.size());
+    
+    // Only select rowid - much faster
+    std::string sql = "SELECT rowid FROM \"" + WideToUtf8(tableName) + "\" LIMIT ? OFFSET ?";
+    
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(_DB, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+        return entries;
+    
+    sqlite3_bind_int64(stmt, 1, limit);
+    sqlite3_bind_int64(stmt, 2, offset);
+    
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        DatabaseEntry entry;
+        
+        entry.RowID = sqlite3_column_int64(stmt, 0);
+        entry.TableName = tableName;
+        entry.Name = L"Row_" + std::to_wstring(entry.RowID);
+        entry.FullPath = tableName + L"/" + entry.Name;
+        entry.Type = ItemType::Record;
+        entry.Attributes = FILE_ATTRIBUTE_NORMAL;
+        entry.ModifiedTime = _LastModified;
+        entry.ColumnCount = colCount;
+        entry.Size = 0; // Unknown until loaded
+        
+        entries.push_back(std::move(entry));
+    }
+    
+    sqlite3_finalize(stmt);
+    return entries;
+}
+
 DatabaseEntry Database::GetRecordByRowID(const std::wstring& tableName, INT64 rowid) const {
+    SQLITEVIEW_LOG(L"GetRecordByRowID ENTER: table='%s' rowid=%lld", tableName.c_str(), rowid);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
+    SQLITEVIEW_LOG(L"GetRecordByRowID: lock acquired");
+    
     DatabaseEntry entry;
     entry.Type = ItemType::Unknown;
     
-    if (!_DB) return entry;
+    if (!_DB) {
+        SQLITEVIEW_LOG(L"GetRecordByRowID EXIT: no DB");
+        return entry;
+    }
     
+    SQLITEVIEW_LOG(L"GetRecordByRowID: getting columns...");
     auto columns = GetColumns(tableName);
+    SQLITEVIEW_LOG(L"GetRecordByRowID: got %zu columns", columns.size());
     if (columns.empty()) return entry;
     
     std::string sql = "SELECT rowid, * FROM \"" + WideToUtf8(tableName) + "\" WHERE rowid = ?";
@@ -705,7 +766,7 @@ bool Database::ExecuteQuery(const std::wstring& sql,
                             std::vector<std::wstring>& columnNames,
                             std::vector<std::vector<std::wstring>>& rows,
                             INT64 maxRows) const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     if (!_DB) return false;
     
@@ -741,7 +802,7 @@ bool Database::ExecuteQuery(const std::wstring& sql,
 }
 
 std::wstring Database::GetCreateStatement(const std::wstring& name) const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     if (!_DB) return L"";
     
@@ -765,7 +826,7 @@ std::wstring Database::GetCreateStatement(const std::wstring& name) const {
 }
 
 Database::Statistics Database::GetStatistics() const {
-    std::lock_guard<std::mutex> lock(_Mutex);
+    std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
     Statistics stats = {};
     

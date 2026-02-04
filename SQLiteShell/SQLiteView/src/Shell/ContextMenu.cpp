@@ -11,10 +11,17 @@ namespace SQLiteView {
 
 ContextMenuHandler::ContextMenuHandler()
     : _RefCount(1)
-    , _FirstCmdID(0) {
+    , _FirstCmdID(0)
+    , _ItemType(ItemType::Unknown)
+    , _Site(nullptr)
+    , _FolderPIDL(nullptr) {
 }
 
 ContextMenuHandler::~ContextMenuHandler() {
+    if (_FolderPIDL) {
+        CoTaskMemFree(_FolderPIDL);
+        _FolderPIDL = nullptr;
+    }
 }
 
 STDMETHODIMP ContextMenuHandler::QueryInterface(REFIID riid, void** ppv) {
@@ -30,6 +37,9 @@ STDMETHODIMP ContextMenuHandler::QueryInterface(REFIID riid, void** ppv) {
     }
     else if (IsEqualIID(riid, IID_IShellExtInit)) {
         *ppv = static_cast<IShellExtInit*>(this);
+    }
+    else if (IsEqualIID(riid, IID_IObjectWithSite)) {
+        *ppv = static_cast<IObjectWithSite*>(this);
     }
     else {
         *ppv = nullptr;
@@ -54,10 +64,21 @@ STDMETHODIMP_(ULONG) ContextMenuHandler::Release() {
 STDMETHODIMP ContextMenuHandler::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst,
     UINT idCmdLast, UINT uFlags) {
     
-    if (uFlags & CMF_DEFAULTONLY) return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
-    
     _FirstCmdID = idCmdFirst;
     UINT cmdID = idCmdFirst;
+    
+    // For CMF_DEFAULTONLY (double-click), provide "Open" as default command
+    // This enables navigation for tables
+    if (uFlags & CMF_DEFAULTONLY) {
+        // If this is a table/folder, add Open command for navigation
+        if (_ItemType == ItemType::Table || _ItemType == ItemType::View || _ItemType == ItemType::SystemTable) {
+            SQLITEVIEW_LOG(L"QueryContextMenu: CMF_DEFAULTONLY - adding Open for table '%s'", _ItemName.c_str());
+            InsertMenuW(hmenu, indexMenu, MF_BYPOSITION | MF_STRING, idCmdFirst + CMD_OPEN, L"Open");
+            SetMenuDefaultItem(hmenu, idCmdFirst + CMD_OPEN, FALSE);
+            return MAKE_HRESULT(SEVERITY_SUCCESS, 0, CMD_MAX);
+        }
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+    }
     
     // Create submenu
     HMENU hSubMenu = CreatePopupMenu();
@@ -104,13 +125,29 @@ STDMETHODIMP ContextMenuHandler::InvokeCommand(CMINVOKECOMMANDINFO* pici) {
     
     // Check if command is specified by offset or verb string
     if (HIWORD(pici->lpVerb) != 0) {
-        // String verb - not supported
+        // String verb - check for "open"
+        const char* verb = pici->lpVerb;
+        SQLITEVIEW_LOG(L"InvokeCommand: String verb='%S'", verb);
+        if (_stricmp(verb, "open") == 0) {
+            // For tables, navigate
+            if (_ItemType == ItemType::Table || _ItemType == ItemType::View || _ItemType == ItemType::SystemTable) {
+                return NavigateToTable(pici->hwnd) ? S_OK : E_FAIL;
+            }
+        }
         return E_INVALIDARG;
     }
     
     UINT cmd = LOWORD(pici->lpVerb);
+    SQLITEVIEW_LOG(L"InvokeCommand: cmd=%u itemType=%d", cmd, (int)_ItemType);
     
     switch (cmd) {
+        case CMD_OPEN:
+            // For tables, navigate into them
+            if (_ItemType == ItemType::Table || _ItemType == ItemType::View || _ItemType == ItemType::SystemTable) {
+                SQLITEVIEW_LOG(L"InvokeCommand: CMD_OPEN for table '%s'", _ItemName.c_str());
+                return NavigateToTable(pici->hwnd) ? S_OK : E_FAIL;
+            }
+            break;
         case CMD_EXPORT_CSV:
             DoExportCSV(pici->hwnd);
             break;
@@ -207,6 +244,22 @@ STDMETHODIMP ContextMenuHandler::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataO
     }
     
     return S_OK;
+}
+
+// IObjectWithSite
+STDMETHODIMP ContextMenuHandler::SetSite(IUnknown* pUnkSite) {
+    SQLITEVIEW_LOG(L"ContextMenuHandler::SetSite called with site=%p", pUnkSite);
+    _Site = pUnkSite;  // Weak reference - do not AddRef (prevent circular ref)
+    return S_OK;
+}
+
+STDMETHODIMP ContextMenuHandler::GetSite(REFIID riid, void** ppvSite) {
+    if (!ppvSite) return E_POINTER;
+    if (!_Site) {
+        *ppvSite = nullptr;
+        return E_FAIL;
+    }
+    return _Site->QueryInterface(riid, ppvSite);
 }
 
 void ContextMenuHandler::DoExportCSV(HWND hwnd) {
@@ -486,6 +539,100 @@ void ContextMenuHandler::DoProperties(HWND hwnd) {
     sei.nShow = SW_SHOW;
     
     ShellExecuteExW(&sei);
+}
+
+bool ContextMenuHandler::NavigateToTable(HWND /*hwnd*/) {
+    SQLITEVIEW_LOG(L"NavigateToTable: START - table='%s' FolderPIDL=%p Site=%p", 
+        _ItemName.c_str(), _FolderPIDL, _Site);
+    
+    if (!_FolderPIDL) {
+        SQLITEVIEW_LOG(L"NavigateToTable: FAIL - no folder PIDL");
+        return false;
+    }
+    
+    if (_ItemName.empty()) {
+        SQLITEVIEW_LOG(L"NavigateToTable: FAIL - no item name");
+        return false;
+    }
+    
+    // Create a PIDL for the table item (same structure as ShellFolder::CreateItemID)
+    size_t itemSize = sizeof(ItemData);
+    size_t totalSize = itemSize + sizeof(USHORT); // Terminator
+    
+    PITEMID_CHILD itemPidl = static_cast<PITEMID_CHILD>(CoTaskMemAlloc(totalSize));
+    if (!itemPidl) {
+        SQLITEVIEW_LOG(L"NavigateToTable: FAIL - CoTaskMemAlloc failed");
+        return false;
+    }
+    
+    ZeroMemory(itemPidl, totalSize);
+    
+    ItemData* data = reinterpret_cast<ItemData*>(&itemPidl->mkid);
+    data->cb = static_cast<USHORT>(itemSize);
+    data->signature = ItemData::SIGNATURE;
+    data->type = _ItemType;
+    data->rowid = 0;
+    data->recordCount = 0;
+    data->columnCount = 0;
+    GetSystemTimeAsFileTime(&data->modifiedTime);
+    
+    StringCchCopyW(data->name, ARRAYSIZE(data->name), _ItemName.c_str());
+    StringCchCopyW(data->path, ARRAYSIZE(data->path), _ItemName.c_str());
+    
+    // Method 1: Use IShellBrowser::BrowseObject for in-place navigation (preferred)
+    if (_Site) {
+        IShellBrowser* pShellBrowser = nullptr;
+        
+        // Try to get IShellBrowser via IServiceProvider
+        IServiceProvider* pServiceProvider = nullptr;
+        if (SUCCEEDED(_Site->QueryInterface(IID_IServiceProvider, (void**)&pServiceProvider))) {
+            pServiceProvider->QueryService(SID_STopLevelBrowser, IID_IShellBrowser, (void**)&pShellBrowser);
+            pServiceProvider->Release();
+        }
+        
+        // Fallback: try direct QueryInterface
+        if (!pShellBrowser) {
+            _Site->QueryInterface(IID_IShellBrowser, (void**)&pShellBrowser);
+        }
+        
+        if (pShellBrowser) {
+            SQLITEVIEW_LOG(L"NavigateToTable: Using IShellBrowser::BrowseObject with relative PIDL");
+            
+            // BrowseObject with relative PIDL navigates into the subfolder
+            HRESULT hr = pShellBrowser->BrowseObject(itemPidl, SBSP_RELATIVE | SBSP_SAMEBROWSER);
+            pShellBrowser->Release();
+            CoTaskMemFree(itemPidl);
+            
+            if (SUCCEEDED(hr)) {
+                SQLITEVIEW_LOG(L"NavigateToTable: BrowseObject SUCCESS");
+                return true;
+            }
+            SQLITEVIEW_LOG(L"NavigateToTable: BrowseObject FAILED hr=0x%08X", hr);
+        }
+    }
+    
+    // Method 2: Fallback to SHOpenFolderAndSelectItems
+    SQLITEVIEW_LOG(L"NavigateToTable: Falling back to SHOpenFolderAndSelectItems");
+    
+    // Combine with folder PIDL to get absolute PIDL
+    PIDLIST_ABSOLUTE targetPidl = ILCombine(_FolderPIDL, itemPidl);
+    CoTaskMemFree(itemPidl);
+    
+    if (!targetPidl) {
+        SQLITEVIEW_LOG(L"NavigateToTable: FAIL - ILCombine failed");
+        return false;
+    }
+    
+    HRESULT hr = SHOpenFolderAndSelectItems(targetPidl, 0, nullptr, 0);
+    CoTaskMemFree(targetPidl);
+    
+    if (FAILED(hr)) {
+        SQLITEVIEW_LOG(L"NavigateToTable: SHOpenFolderAndSelectItems FAILED hr=0x%08X", hr);
+        return false;
+    }
+    
+    SQLITEVIEW_LOG(L"NavigateToTable: SUCCESS (via SHOpenFolderAndSelectItems)");
+    return true;
 }
 
 } // namespace SQLiteView

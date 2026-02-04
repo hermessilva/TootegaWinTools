@@ -13,7 +13,7 @@
 <?define ProductName = "SQLiteView" ?>
 <?define ProductVersion = "1.0.0" ?>
 <?define ProductManufacturer = "Tootega Pesquisa e Inovacao" ?>
-<?define UpgradeCode = "8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3F" ?>
+<?define UpgradeCode = "034DE3FC-502C-4E3C-B83C-D219F434FC8E" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
@@ -60,71 +60,156 @@
     <!-- Icon -->
     <Icon Id="ProductIcon" SourceFile="Resources\database.ico" />
 
-    <!-- Directory structure -->
+    <!-- ================================================================ -->
+    <!-- Directory Structure                                               -->
+    <!-- ================================================================ -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="TootegaFolder" Name="Tootega">
+        <Directory Id="ManufacturerFolder" Name="Tootega">
           <Directory Id="INSTALLFOLDER" Name="SQLiteView" />
         </Directory>
       </Directory>
+      <Directory Id="SystemFolder" />
     </Directory>
 
-    <!-- Components -->
+    <!-- ================================================================ -->
+    <!-- Components                                                        -->
+    <!-- ================================================================ -->
     <DirectoryRef Id="INSTALLFOLDER">
+      
+      <!-- Main DLL Component -->
       <Component Id="MainDLL" Guid="9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F" Win64="yes">
-        <File Id="SQLiteViewDLL" 
-              Source="$(var.SolutionDir)..\x64\Release\SQLiteView.dll"
+        <File Id="SQLiteViewDLL"
+              Name="SQLiteView.dll"
+              Source="..\x64\Release\SQLiteView.dll"
               KeyPath="yes"
-              Vital="yes">
-          <Class Id="8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E"
-                 Description="SQLiteView Shell Folder"
-                 Context="InprocServer32"
-                 ThreadingModel="apartment" />
-        </File>
-        
-        <!-- Self-registration of the DLL -->
-        <RegistryValue Root="HKLM"
-                       Key="SOFTWARE\Tootega\SQLiteView"
-                       Name="InstallPath"
-                       Type="string"
-                       Value="[INSTALLFOLDER]"
-                       KeyPath="no" />
+              Vital="yes" />
       </Component>
+
+      <!-- PDB Component (optional) -->
+      <Component Id="DebugSymbols" Guid="AC1D2E3F-4B5C-6D7E-8F9A-0B1C2D3E4F5A" Win64="yes">
+        <File Id="SQLiteViewPDB"
+              Name="SQLiteView.pdb"
+              Source="..\x64\Release\SQLiteView.pdb"
+              KeyPath="yes" />
+      </Component>
+
     </DirectoryRef>
 
-    <!-- Feature -->
-    <Feature Id="ProductFeature" Title="SQLiteView" Level="1">
+    <!-- ================================================================ -->
+    <!-- Features                                                          -->
+    <!-- ================================================================ -->
+    <Feature Id="MainFeature"
+             Title="SQLiteView Shell Extension"
+             Description="Windows Explorer integration for SQLite databases"
+             Level="1"
+             ConfigurableDirectory="INSTALLFOLDER"
+             AllowAdvertise="no"
+             Absent="disallow">
       <ComponentRef Id="MainDLL" />
     </Feature>
 
-    <!-- Custom Actions for COM registration -->
+    <Feature Id="DebugFeature"
+             Title="Debug Symbols"
+             Description="PDB files for debugging (optional)"
+             Level="1000"
+             AllowAdvertise="no">
+      <ComponentRef Id="DebugSymbols" />
+    </Feature>
+
+    <!-- ================================================================ -->
+    <!-- Custom Actions for COM Registration                               -->
+    <!-- ================================================================ -->
+
+    <!-- Path properties -->
+    <Property Id="REGSVR32">
+      <DirectorySearch Id="RegSvr32Search" Path="[SystemFolder]">
+        <FileSearch Name="regsvr32.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <!-- Register DLL (Install) -->
     <CustomAction Id="RegisterDLL"
                   Directory="INSTALLFOLDER"
-                  ExeCommand="[SystemFolder]regsvr32.exe /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
+                  ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
                   Execute="deferred"
                   Impersonate="no"
                   Return="check" />
 
+    <!-- Unregister DLL (Uninstall) -->
     <CustomAction Id="UnregisterDLL"
                   Directory="INSTALLFOLDER"
-                  ExeCommand="[SystemFolder]regsvr32.exe /u /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
+                  ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /u /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
                   Execute="deferred"
                   Impersonate="no"
                   Return="ignore" />
 
-    <!-- Install sequence -->
+    <!-- Stop shell host processes before install/uninstall -->
+    <CustomAction Id="StopShellHosts"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM dllhost.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Stop Explorer -->
+    <CustomAction Id="StopExplorer"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Restart Explorer -->
+    <CustomAction Id="StartExplorer"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]cmd.exe /c start /b explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Set properties for deferred actions -->
+    <CustomAction Id="SetStopShellHosts" Property="StopShellHosts" Value="[SystemFolder]" />
+    <CustomAction Id="SetStopExplorer" Property="StopExplorer" Value="[SystemFolder]" />
+    <CustomAction Id="SetStartExplorer" Property="StartExplorer" Value="[SystemFolder]" />
+    <CustomAction Id="SetRegisterDLL" Property="RegisterDLL" Value="[INSTALLFOLDER]" />
+    <CustomAction Id="SetUnregisterDLL" Property="UnregisterDLL" Value="[INSTALLFOLDER]" />
+
+    <!-- ================================================================ -->
+    <!-- Install/Uninstall Sequence                                        -->
+    <!-- ================================================================ -->
     <InstallExecuteSequence>
-      <Custom Action="UnregisterDLL" Before="RemoveFiles">
-        (REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE
-      </Custom>
-      <Custom Action="RegisterDLL" After="InstallFiles">
-        NOT Installed OR REINSTALL
-      </Custom>
+      <!-- Prepare custom action properties -->
+      <Custom Action="SetStopShellHosts" Before="StopShellHosts">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetStopExplorer" Before="StopExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetStartExplorer" Before="StartExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetRegisterDLL" Before="RegisterDLL">NOT REMOVE</Custom>
+      <Custom Action="SetUnregisterDLL" Before="UnregisterDLL">REMOVE</Custom>
+
+      <!-- Stop processes before file operations -->
+      <Custom Action="StopShellHosts" Before="StopExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="StopExplorer" Before="InstallFiles">NOT UPGRADINGPRODUCTCODE</Custom>
+
+      <!-- Unregister before removing files -->
+      <Custom Action="UnregisterDLL" Before="RemoveFiles">REMOVE="ALL"</Custom>
+
+      <!-- Register after installing files -->
+      <Custom Action="RegisterDLL" After="InstallFiles">NOT REMOVE</Custom>
+
+      <!-- Restart Explorer after everything -->
+      <Custom Action="StartExplorer" After="InstallFinalize">NOT UPGRADINGPRODUCTCODE</Custom>
     </InstallExecuteSequence>
 
-    <!-- UI -->
+    <!-- ================================================================ -->
+    <!-- User Interface                                                    -->
+    <!-- ================================================================ -->
     <UIRef Id="WixUI_Minimal" />
+    
     <WixVariable Id="WixUILicenseRtf" Value="Resources\License.rtf" />
+
+    <!-- Exit dialog text -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" 
+              Value="SQLiteView has been installed successfully. Please restart Windows Explorer or log off/on for changes to take effect." />
 
   </Product>
 </Wix>
