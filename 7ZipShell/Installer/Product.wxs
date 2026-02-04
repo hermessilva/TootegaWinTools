@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SevenZipView Windows Installer Package (WiX 3.x)
+  Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
+  
+  This installer:
+  - Installs SevenZipView.dll to Program Files\Tootega\SevenZipView
+  - Registers the COM DLL (shell extension) using regsvr32
+  - Requires Administrator elevation (perMachine scope)
+  - Supports Install/Uninstall/Repair
+  - Detects existing installation and offers appropriate action
+-->
+<?define ProductName = "SevenZipView" ?>
+<?define ProductVersion = "1.0.0" ?>
+<?define ProductManufacturer = "Tootega Pesquisa e Inovacao" ?>
+<?define UpgradeCode = "7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C5F" ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.ProductManufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <!-- Package attributes - requires elevation -->
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Platform="x64"
+             Description="SevenZipView - Windows Explorer Shell Extension for 7-Zip Archives"
+             Comments="Integrates 7-Zip archive browsing into Windows Explorer"
+             Manufacturer="$(var.ProductManufacturer)"
+             InstallPrivileges="elevated" />
+
+    <!-- Require Windows 10 x64 -->
+    <Condition Message="This application requires Windows 10 or later.">
+      <![CDATA[VersionNT >= 603]]>
+    </Condition>
+    <Condition Message="This application requires a 64-bit version of Windows.">
+      <![CDATA[VersionNT64]]>
+    </Condition>
+
+    <!-- Media definition -->
+    <Media Id="1" Cabinet="SevenZipView.cab" EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Upgrade handling -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes"
+                  Schedule="afterInstallValidate" />
+
+    <!-- Properties for Add/Remove Programs -->
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/tootega/7ZipShell" />
+    <Property Id="ARPNOMODIFY" Value="yes" />
+    <Property Id="ARPNOREPAIR" Value="no" />
+    
+    <!-- Icon -->
+    <Icon Id="ProductIcon" SourceFile="Resources\SevenZipView.ico" />
+
+    <!-- ================================================================ -->
+    <!-- Directory Structure                                               -->
+    <!-- ================================================================ -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="ManufacturerFolder" Name="Tootega">
+          <Directory Id="INSTALLFOLDER" Name="SevenZipView" />
+        </Directory>
+      </Directory>
+      <Directory Id="SystemFolder" />
+    </Directory>
+
+    <!-- ================================================================ -->
+    <!-- Components                                                        -->
+    <!-- ================================================================ -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      
+      <!-- Main DLL Component -->
+      <Component Id="MainDLL" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C60" Win64="yes">
+        <File Id="SevenZipViewDLL"
+              Name="SevenZipView.dll"
+              Source="..\x64\Release\SevenZipView.dll"
+              KeyPath="yes"
+              Vital="yes" />
+      </Component>
+
+      <!-- PDB Component (optional) -->
+      <Component Id="DebugSymbols" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C61" Win64="yes">
+        <File Id="SevenZipViewPDB"
+              Name="SevenZipView.pdb"
+              Source="..\x64\Release\SevenZipView.pdb"
+              KeyPath="yes" />
+      </Component>
+
+    </DirectoryRef>
+
+    <!-- ================================================================ -->
+    <!-- Features                                                          -->
+    <!-- ================================================================ -->
+    <Feature Id="MainFeature"
+             Title="SevenZipView Shell Extension"
+             Description="Windows Explorer integration for 7-Zip archives"
+             Level="1"
+             ConfigurableDirectory="INSTALLFOLDER"
+             AllowAdvertise="no"
+             Absent="disallow">
+      <ComponentRef Id="MainDLL" />
+    </Feature>
+
+    <Feature Id="DebugFeature"
+             Title="Debug Symbols"
+             Description="PDB files for debugging (optional)"
+             Level="1000"
+             AllowAdvertise="no">
+      <ComponentRef Id="DebugSymbols" />
+    </Feature>
+
+    <!-- ================================================================ -->
+    <!-- Custom Actions for COM Registration                               -->
+    <!-- ================================================================ -->
+
+    <!-- Path properties -->
+    <Property Id="REGSVR32">
+      <DirectorySearch Id="RegSvr32Search" Path="[SystemFolder]">
+        <FileSearch Name="regsvr32.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <!-- Register DLL (Install) -->
+    <CustomAction Id="RegisterDLL"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /s &quot;[INSTALLFOLDER]SevenZipView.dll&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <!-- Unregister DLL (Uninstall) -->
+    <CustomAction Id="UnregisterDLL"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[SystemFolder]regsvr32.exe&quot; /u /s &quot;[INSTALLFOLDER]SevenZipView.dll&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Stop shell host processes before install/uninstall -->
+    <CustomAction Id="StopShellHosts"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM dllhost.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Stop Explorer -->
+    <CustomAction Id="StopExplorer"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Restart Explorer -->
+    <CustomAction Id="StartExplorer"
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]cmd.exe /c start /b explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Set properties for deferred actions -->
+    <CustomAction Id="SetStopShellHosts" Property="StopShellHosts" Value="[SystemFolder]" />
+    <CustomAction Id="SetStopExplorer" Property="StopExplorer" Value="[SystemFolder]" />
+    <CustomAction Id="SetStartExplorer" Property="StartExplorer" Value="[SystemFolder]" />
+    <CustomAction Id="SetRegisterDLL" Property="RegisterDLL" Value="[INSTALLFOLDER]" />
+    <CustomAction Id="SetUnregisterDLL" Property="UnregisterDLL" Value="[INSTALLFOLDER]" />
+
+    <!-- ================================================================ -->
+    <!-- Install/Uninstall Sequence                                        -->
+    <!-- ================================================================ -->
+    <InstallExecuteSequence>
+      <!-- Prepare custom action properties -->
+      <Custom Action="SetStopShellHosts" Before="StopShellHosts">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetStopExplorer" Before="StopExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetStartExplorer" Before="StartExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="SetRegisterDLL" Before="RegisterDLL">NOT REMOVE</Custom>
+      <Custom Action="SetUnregisterDLL" Before="UnregisterDLL">REMOVE</Custom>
+
+      <!-- Stop processes before file operations -->
+      <Custom Action="StopShellHosts" Before="StopExplorer">NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="StopExplorer" Before="InstallFiles">NOT UPGRADINGPRODUCTCODE</Custom>
+
+      <!-- Unregister before removing files -->
+      <Custom Action="UnregisterDLL" Before="RemoveFiles">REMOVE="ALL"</Custom>
+
+      <!-- Register after installing files -->
+      <Custom Action="RegisterDLL" After="InstallFiles">NOT REMOVE</Custom>
+
+      <!-- Restart Explorer after everything -->
+      <Custom Action="StartExplorer" After="InstallFinalize">NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+
+    <!-- ================================================================ -->
+    <!-- User Interface                                                    -->
+    <!-- ================================================================ -->
+    <UIRef Id="WixUI_Minimal" />
+    
+    <WixVariable Id="WixUILicenseRtf" Value="Resources\License.rtf" />
+
+    <!-- Exit dialog text -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" 
+              Value="SevenZipView has been installed successfully. Please restart Windows Explorer or log off/on for changes to take effect." />
+
+  </Product>
+</Wix>

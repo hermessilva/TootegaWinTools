@@ -1,0 +1,181 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "..\\Include\\Resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#include "afxres.h"
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/////////////////////////////////////////////////////////////////////////////
+// Menu
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Capture\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Open Video...\tCtrl+O",      ID_FILE_OPEN_VIDEO
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Windows...",                 ID_WINDOW_MANAGER
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_APP_ABOUT
+    END
+END
+
+IDR_CAPTURETYPE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Capture\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Open Video...\tCtrl+O",      ID_FILE_OPEN_VIDEO
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Windows...",                 ID_WINDOW_MANAGER
+        MENUITEM SEPARATOR
+        MENUITEM "&Reset Layout",               ID_WINDOW_RESET_LAYOUT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_APP_ABOUT
+    END
+END
+
+IDR_VIDEOEDITORTYPE MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Capture\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Open Video...\tCtrl+O",      ID_FILE_OPEN_VIDEO
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Windows...",                 ID_WINDOW_MANAGER
+        MENUITEM SEPARATOR
+        MENUITEM "&Reset Layout",               ID_WINDOW_RESET_LAYOUT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_APP_ABOUT
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Accelerator
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
+    "O",            ID_FILE_OPEN_VIDEO,     VIRTKEY, CONTROL
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Dialog
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 180, 60
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Tootega Video Tool 1.0", IDC_STATIC, 14, 14, 120, 8, SS_NOPREFIX
+    LTEXT           "Copyright (C) 2026 Tootega Pesquisa e Inovação", IDC_STATIC, 14, 26, 180, 8
+    DEFPUSHBUTTON   "OK", IDOK, 65, 42, 50, 14, WS_GROUP
+END
+
+IDD_EXPORT_PROGRESS DIALOGEX 0, 0, 250, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Exporting Video"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Exporting...", IDC_EXPORT_STATUS, 10, 10, 230, 12, SS_CENTER
+    CONTROL         "", IDC_EXPORT_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 28, 230, 14
+    LTEXT           "Calculating...", IDC_EXPORT_ETA, 10, 48, 230, 12, SS_CENTER
+    PUSHBUTTON      "Cancel", IDCANCEL, 100, 68, 50, 14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// String Table
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "TootegaVideoTool"
+    IDR_CAPTURETYPE         "\nCapture\nCapture\n\n\nTootegaVideoTool.Document\nWindow Capture"
+    IDR_VIDEOEDITORTYPE     "\nVideo\nVideo\nVideo Files (*.mp4;*.avi;*.mkv;*.mov;*.wmv)\n.mp4;.avi;.mkv;.mov;.wmv\nTootegaVideoTool.VideoEditor\nVideo Editor"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "Tootega Video Tool"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW             "Create a new capture\nNew"
+    ID_FILE_OPEN_VIDEO      "Open a video file for editing\nOpen Video"
+    ID_FILE_CLOSE           "Close\nClose"
+    ID_APP_ABOUT            "About\nAbout"
+    ID_APP_EXIT             "Exit\nExit"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Version
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Tootega Pesquisa e Inovação"
+            VALUE "FileDescription", "Tootega Video Tool"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "TootegaVideoTool.exe"
+            VALUE "LegalCopyright", "(c) 1999-2026 Tootega Pesquisa e Inovação. All rights reserved."
+            VALUE "OriginalFilename", "TootegaVideoTool.exe"
+            VALUE "ProductName", "Tootega Video Tool"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// MFC Standard Resources (required for static MFC linking)
+
+#ifndef _AFXDLL
+#include "afxres.rc"         // Standard MFC resources
+#include "afxprint.rc"       // Print/Preview resources
+#include "afxribbon.rc"      // MFC Feature Pack (ribbon, tabs)
+#endif
+
+#endif

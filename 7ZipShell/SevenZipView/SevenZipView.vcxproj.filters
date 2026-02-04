@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shell">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995381-89BD-4b04-88EB-625FBE52EBFC}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="7-Zip SDK">
+      <UniqueIdentifier>{D4E5F6A7-8B9C-0d1e-2F3A-4B5C6D7E8F9A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="7-Zip SDK\Headers">
+      <UniqueIdentifier>{D4E5F6A8-8B9C-0d1e-2F3A-4B5C6D7E8F9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB7-F800-4c08-8B7A-83BB121AAD02}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Scripts">
+      <UniqueIdentifier>{E5F6A7B8-9C0D-1e2f-3A4B-5C6D7E8F9A0B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+
+  <!-- SevenZipView Source Files -->
+  <ItemGroup>
+    <ClCompile Include="src\DllMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Core\Archive.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\ShellFolder.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\ContextMenu.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\PreviewHandler.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\PropertyHandler.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\IconHandler.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shell\Extractor.cpp">
+      <Filter>Source Files\Shell</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- 7-Zip SDK Source Files -->
+  <ItemGroup>
+    <ClCompile Include="..\..\7Zip\C\7zAlloc.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zArcIn.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zBuf.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zBuf2.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zCrc.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zCrcOpt.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zDec.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zFile.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\7zStream.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Bcj2.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Bra.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Bra86.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\BraIA64.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\CpuArch.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Delta.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Lzma2Dec.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\LzmaDec.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Ppmd7.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Ppmd7Dec.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Sha256.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Sha256Opt.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\Aes.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\7Zip\C\AesOpt.c">
+      <Filter>7-Zip SDK</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- Header Files -->
+  <ItemGroup>
+    <ClInclude Include="include\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Archive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ArchiveEntry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShellFolder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ContextMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PreviewHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PropertyHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IconHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Extractor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+
+  <!-- 7-Zip SDK Headers -->
+  <ItemGroup>
+    <ClInclude Include="..\..\7Zip\C\7z.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\7zAlloc.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\7zBuf.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\7zCrc.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\7zFile.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\7zTypes.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\LzmaDec.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\Lzma2Dec.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\7Zip\C\Ppmd7.h">
+      <Filter>7-Zip SDK\Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+
+  <!-- Resource Files -->
+  <ItemGroup>
+    <ResourceCompile Include="resources\SevenZipView.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+
+  <!-- Module Definition -->
+  <ItemGroup>
+    <None Include="SevenZipView.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+
+  <!-- Other Files -->
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="Install.ps1">
+      <Filter>Scripts</Filter>
+    </None>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
+</Project>
