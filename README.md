@@ -26,14 +26,14 @@ This repository contains a collection of **Windows-native tools** developed by T
 | Project | Description | Documentation |
 |---------|-------------|---------------|
 | **TootegaWinLib** | Foundation C++ library for Windows development. Provides RAII wrappers, error handling, string utilities, cryptography, registry access, logging, shell extension infrastructure, and more. | [README](TootegaWinLib/README.md) |
-| **ByTokenCommon** | ⚠️ **DEPRECATED** — Compatibility layer for legacy projects. Now wraps TootegaWinLib. | [README](ByTokenCommon/README.md) |
+| **TootegaWinMFCLib** | MFC-based UI framework library. Provides application framework, screen capture, video recording, and video editing components using Media Foundation. | [README](TootegaWinMFCLib/README.md) |
 
 ### Applications
 
 | Project | Description | Documentation |
 |---------|-------------|---------------|
 | **7ZipShell (SevenZipView)** | Windows Explorer shell extension for browsing `.7z` archives as virtual folders. Includes preview handler, property handler, context menu, and custom icons. | [README](7ZipShell/README.md) |
-| **TootelaUITools** | MFC-based UI application for screen capture and video recording. Uses TootegaWinLib for core utilities. | [README](TootelaUITools/README.md) |
+| **TootegaVideoTool** | Professional screen capture and video editing application. MDI interface with real-time preview, H.264 encoding, frame-accurate editing, and export with cropping. | [README](TootegaVideoTool/README.md) |
 
 ---
 
@@ -62,6 +62,12 @@ Tools/
 │   ├── Include/                 # Public headers
 │   └── Source/                  # Implementation
 │
+├── TootegaWinMFCLib/            # MFC UI framework library (static lib) - ACTIVE
+│   ├── README.md
+│   ├── TootegaWinMFCLib.vcxproj
+│   ├── Include/                 # Public headers (MFC components)
+│   └── Source/                  # Implementation
+│
 ├── ByTokenCommon/               # Legacy compatibility layer - DEPRECATED
 │   ├── README.md
 │   ├── ByTokenCommon.vcxproj    # Header-only wrapper
@@ -75,9 +81,9 @@ Tools/
 │   ├── Installer/               # Setup executable
 │   └── ...
 │
-├── TootelaUITools/              # MFC UI application
+├── TootegaVideoTool/            # Screen capture and video editor app
 │   ├── README.md
-│   ├── TootelaUITools.vcxproj
+│   ├── TootegaVideoTool.vcxproj
 │   ├── Include/                 # Application headers
 │   ├── Source/                  # Application source
 │   └── Resource/                # MFC resources
@@ -195,6 +201,36 @@ The **foundation library** for all Windows tools. Provides:
 - **XGlobalEvent** — Cross-process synchronization
 
 📖 [Full documentation](TootegaWinLib/README.md)
+
+---
+
+### TootegaWinMFCLib
+
+The **MFC UI framework library** for desktop applications. Provides:
+
+- **XApplication** — MDI application framework with Media Foundation integration
+- **XVideoRecorder** — Hardware-accelerated screen capture and H.264 encoding
+- **XVideoEditorDocument** — Frame-accurate video file handling
+- **XPreviewPanel** — Live window preview with selection rectangle
+- **XThumbnailStrip** — Visual timeline for video navigation
+- **XWindowEnumerator** — Window discovery and enumeration
+
+📖 [Full documentation](TootegaWinMFCLib/README.md)
+
+---
+
+### TootegaVideoTool
+
+A **professional screen capture and video editing application**:
+
+- Window-based screen recording with region selection
+- Real-time preview with configurable FPS (1-60)
+- H.264/MP4 hardware-accelerated encoding
+- Frame-accurate video editing with mark in/out
+- Export trimmed segments with optional cropping
+- MDI interface for multiple simultaneous projects
+
+📖 [Full documentation](TootegaVideoTool/README.md)
 
 ---
 
