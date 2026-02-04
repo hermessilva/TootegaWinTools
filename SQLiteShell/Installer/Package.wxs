@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SevenZipView Windows Installer Package
+  Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
+  
+  This installer:
+  - Installs SevenZipView.dll to Program Files\Tootega
+  - Registers the COM DLL (shell extension)
+  - Requires Administrator elevation
+  - Supports Install/Uninstall/Repair
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <!-- Product Information -->
+  <Package Name="SevenZipView"
+           Manufacturer="Tootega Pesquisa e Inovacao"
+           Version="1.0.0.0"
+           UpgradeCode="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C5F"
+           Scope="perMachine"
+           Language="1033"
+           Compressed="yes"
+           InstallerVersion="500">
+
+    <!-- Require Windows 10 or later -->
+    <Launch Condition="VersionNT &gt;= 603" 
+            Message="This application requires Windows 10 or later." />
+
+    <!-- Require 64-bit Windows -->
+    <Launch Condition="VersionNT64" 
+            Message="This application requires a 64-bit version of Windows." />
+
+    <!-- Require Administrator -->
+    <Launch Condition="Privileged" 
+            Message="Administrator privileges are required to install this application." />
+
+    <!-- Summary Information -->
+    <SummaryInformation Description="SevenZipView - Windows Explorer Shell Extension for 7-Zip Archives"
+                        Keywords="7zip,archive,shell,extension"
+                        Manufacturer="Tootega Pesquisa e Inovacao" />
+
+    <!-- Media / Compression -->
+    <Media Id="1" Cabinet="SevenZipView.cab" EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Upgrade handling - allows upgrade/downgrade -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes"
+                  Schedule="afterInstallInitialize" />
+
+    <!-- Custom Icon for Add/Remove Programs -->
+    <Icon Id="ProductIcon" SourceFile="Resources\SevenZipView.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/tootega/7ZipShell" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/tootega/7ZipShell/releases" />
+    <Property Id="ARPNOMODIFY" Value="yes" />
+
+    <!-- ================================================================ -->
+    <!-- Directory Structure                                               -->
+    <!-- ================================================================ -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Tootega">
+        <Directory Id="PRODUCTFOLDER" Name="SevenZipView" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- ================================================================ -->
+    <!-- Components                                                        -->
+    <!-- ================================================================ -->
+    <ComponentGroup Id="ProductComponents" Directory="PRODUCTFOLDER">
+      
+      <!-- Main DLL - Self-registering COM component -->
+      <Component Id="SevenZipViewDLL" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C60" Win64="yes">
+        <File Id="SevenZipView.dll" 
+              Name="SevenZipView.dll" 
+              Source="..\x64\Release\SevenZipView.dll"
+              KeyPath="yes"
+              SelfRegCost="1"
+              Vital="yes" />
+      </Component>
+
+      <!-- PDB file (optional, for debugging) -->
+      <Component Id="SevenZipViewPDB" Guid="7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C61" Win64="yes">
+        <File Id="SevenZipView.pdb" 
+              Name="SevenZipView.pdb" 
+              Source="..\x64\Release\SevenZipView.pdb"
+              KeyPath="yes" />
+        <Condition>INSTALLPDB</Condition>
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ================================================================ -->
+    <!-- Features                                                          -->
+    <!-- ================================================================ -->
+    <Feature Id="ProductFeature" 
+             Title="SevenZipView Shell Extension" 
+             Description="Windows Explorer integration for 7-Zip archives"
+             Level="1"
+             ConfigurableDirectory="INSTALLFOLDER"
+             AllowAdvertise="no"
+             InstallDefault="local"
+             Absent="disallow">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <!-- ================================================================ -->
+    <!-- Custom Actions                                                    -->
+    <!-- ================================================================ -->
+    
+    <!-- Stop Explorer before install/uninstall -->
+    <CustomAction Id="StopExplorer" 
+                  Directory="PRODUCTFOLDER"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Stop shell host processes -->
+    <CustomAction Id="StopShellHosts" 
+                  Directory="PRODUCTFOLDER"
+                  ExeCommand="[SystemFolder]taskkill.exe /F /IM dllhost.exe /IM prevhost.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Restart Explorer after install -->
+    <CustomAction Id="StartExplorer" 
+                  Directory="SystemFolder"
+                  ExeCommand="[SystemFolder]cmd.exe /c start explorer.exe"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Notify Shell of changes (refresh icons) -->
+    <CustomAction Id="NotifyShell"
+                  BinaryRef="CustomActionDll"
+                  DllEntry="NotifyShellChange"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- ================================================================ -->
+    <!-- Install Sequence                                                  -->
+    <!-- ================================================================ -->
+    <InstallExecuteSequence>
+      <!-- Stop processes before modifying files -->
+      <Custom Action="StopShellHosts" Before="StopExplorer">
+        NOT UPGRADINGPRODUCTCODE
+      </Custom>
+      <Custom Action="StopExplorer" Before="InstallFiles">
+        NOT UPGRADINGPRODUCTCODE
+      </Custom>
+      
+      <!-- Restart Explorer and notify shell after install -->
+      <Custom Action="StartExplorer" After="InstallFinalize">
+        NOT UPGRADINGPRODUCTCODE
+      </Custom>
+    </InstallExecuteSequence>
+
+    <!-- ================================================================ -->
+    <!-- UI Configuration                                                  -->
+    <!-- ================================================================ -->
+    <UI>
+      <!-- Use built-in minimal UI -->
+      <UIRef Id="WixUI_Minimal" />
+      
+      <!-- License agreement -->
+      <WixVariable Id="WixUILicenseRtf" Value="Resources\License.rtf" />
+      
+      <!-- Banner images -->
+      <WixVariable Id="WixUIBannerBmp" Value="Resources\Banner.bmp" />
+      <WixVariable Id="WixUIDialogBmp" Value="Resources\Dialog.bmp" />
+    </UI>
+
+    <!-- Custom UI for Install/Uninstall detection -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" 
+              Value="SevenZipView has been successfully installed. You may need to restart Windows Explorer or log off for changes to take full effect." />
+
+  </Package>
+</Wix>

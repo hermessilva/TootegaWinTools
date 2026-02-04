@@ -1,0 +1,54 @@
+/*
+** SQLiteView - Windows Explorer Shell Extension for SQLite Databases
+** Resources
+** Copyright (c) 1999-2026 Tootega Pesquisa e Inovação. All rights reserved.
+** Licensed under MIT License
+*/
+
+#include <winres.h>
+
+// Version Info
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION 1,0,0,0
+    PRODUCTVERSION 1,0,0,0
+    FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+    FILEFLAGS VS_FF_DEBUG
+#else
+    FILEFLAGS 0x0L
+#endif
+    FILEOS VOS_NT_WINDOWS32
+    FILETYPE VFT_DLL
+    FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Tootega Pesquisa e Inovação"
+            VALUE "FileDescription", "SQLiteView Shell Extension - Browse SQLite databases in Explorer"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "SQLiteView.dll"
+            VALUE "LegalCopyright", "Copyright © 1999-2026 Tootega Pesquisa e Inovação. All rights reserved."
+            VALUE "OriginalFilename", "SQLiteView.dll"
+            VALUE "ProductName", "SQLiteView"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+// Icons
+// 0 = Database file icon
+// 1 = Open database icon
+// 2 = Table icon
+// 3 = View icon
+// 4 = Record icon
+// Note: Add these icons to the resources folder:
+// IDI_DATABASE ICON "database.ico"
+// IDI_TABLE    ICON "table.ico"
+// IDI_VIEW     ICON "view.ico"
+// IDI_RECORD   ICON "record.ico"

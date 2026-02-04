@@ -32,4 +32,15 @@
     </Project>
   </Folder>
 
+  <!-- SQLiteShell - Shell Extension for SQLite Databases -->
+  <Folder Name="/SQLiteShell/">
+    <Project Path="SQLiteShell/SQLiteView/SQLiteView.vcxproj" Id="8b9c0d1e-2f3a-4b5c-9d0e-1f2a3b4c5d6f">
+      <BuildDependency Project="TootegaWinLib/TootegaWinLib.vcxproj" />
+    </Project>
+    <Project Path="SQLiteShell/Installer/SQLiteViewSetup.vcxproj" Id="9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f">
+      <BuildDependency Project="SQLiteShell/SQLiteView/SQLiteView.vcxproj" />
+      <BuildDependency Project="TootegaWinLib/TootegaWinLib.vcxproj" />
+    </Project>
+  </Folder>
+
 </Solution>

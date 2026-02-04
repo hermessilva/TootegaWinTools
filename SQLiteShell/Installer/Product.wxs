@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SQLiteView Windows Installer Package (WiX 3.x)
+  Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
+  
+  This installer:
+  - Installs SQLiteView.dll to Program Files\Tootega\SQLiteView
+  - Registers the COM DLL (shell extension) using regsvr32
+  - Requires Administrator elevation (perMachine scope)
+  - Supports Install/Uninstall/Repair
+  - Detects existing installation and offers appropriate action
+-->
+<?define ProductName = "SQLiteView" ?>
+<?define ProductVersion = "1.0.0" ?>
+<?define ProductManufacturer = "Tootega Pesquisa e Inovacao" ?>
+<?define UpgradeCode = "8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3F" ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.ProductManufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <!-- Package attributes - requires elevation -->
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Platform="x64"
+             Description="SQLiteView - Windows Explorer Shell Extension for SQLite Databases"
+             Comments="Browse SQLite databases directly in Windows Explorer"
+             Manufacturer="$(var.ProductManufacturer)"
+             InstallPrivileges="elevated" />
+
+    <!-- Require Windows 10 x64 -->
+    <Condition Message="This application requires Windows 10 or later.">
+      <![CDATA[VersionNT >= 603]]>
+    </Condition>
+    <Condition Message="This application requires a 64-bit version of Windows.">
+      <![CDATA[VersionNT64]]>
+    </Condition>
+
+    <!-- Media definition -->
+    <Media Id="1" Cabinet="SQLiteView.cab" EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Upgrade handling -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes"
+                  Schedule="afterInstallValidate" />
+
+    <!-- Properties for Add/Remove Programs -->
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/tootega/SQLiteShell" />
+    <Property Id="ARPNOMODIFY" Value="yes" />
+    <Property Id="ARPNOREPAIR" Value="no" />
+    
+    <!-- Icon -->
+    <Icon Id="ProductIcon" SourceFile="Resources\database.ico" />
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="TootegaFolder" Name="Tootega">
+          <Directory Id="INSTALLFOLDER" Name="SQLiteView" />
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- Components -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainDLL" Guid="9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F" Win64="yes">
+        <File Id="SQLiteViewDLL" 
+              Source="$(var.SolutionDir)..\x64\Release\SQLiteView.dll"
+              KeyPath="yes"
+              Vital="yes">
+          <Class Id="8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E"
+                 Description="SQLiteView Shell Folder"
+                 Context="InprocServer32"
+                 ThreadingModel="apartment" />
+        </File>
+        
+        <!-- Self-registration of the DLL -->
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Tootega\SQLiteView"
+                       Name="InstallPath"
+                       Type="string"
+                       Value="[INSTALLFOLDER]"
+                       KeyPath="no" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Feature -->
+    <Feature Id="ProductFeature" Title="SQLiteView" Level="1">
+      <ComponentRef Id="MainDLL" />
+    </Feature>
+
+    <!-- Custom Actions for COM registration -->
+    <CustomAction Id="RegisterDLL"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[SystemFolder]regsvr32.exe /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="UnregisterDLL"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[SystemFolder]regsvr32.exe /u /s &quot;[INSTALLFOLDER]SQLiteView.dll&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!-- Install sequence -->
+    <InstallExecuteSequence>
+      <Custom Action="UnregisterDLL" Before="RemoveFiles">
+        (REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE
+      </Custom>
+      <Custom Action="RegisterDLL" After="InstallFiles">
+        NOT Installed OR REINSTALL
+      </Custom>
+    </InstallExecuteSequence>
+
+    <!-- UI -->
+    <UIRef Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="Resources\License.rtf" />
+
+  </Product>
+</Wix>
