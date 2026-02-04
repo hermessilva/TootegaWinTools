@@ -120,6 +120,7 @@
     <ClCompile Include="Source\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\XApplication.cpp" />
   </ItemGroup>
   <!-- Resource Files -->
   <ItemGroup>
