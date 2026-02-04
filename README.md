@@ -21,17 +21,19 @@ This repository contains a collection of **Windows-native tools** developed by T
 
 ## 📦 Projects
 
-### Core Library
+### Core Libraries
 
 | Project | Description | Documentation |
 |---------|-------------|---------------|
 | **TootegaWinLib** | Foundation C++ library for Windows development. Provides RAII wrappers, error handling, string utilities, cryptography, registry access, logging, shell extension infrastructure, and more. | [README](TootegaWinLib/README.md) |
+| **ByTokenCommon** | ⚠️ **DEPRECATED** — Compatibility layer for legacy projects. Now wraps TootegaWinLib. | [README](ByTokenCommon/README.md) |
 
 ### Applications
 
 | Project | Description | Documentation |
 |---------|-------------|---------------|
 | **7ZipShell (SevenZipView)** | Windows Explorer shell extension for browsing `.7z` archives as virtual folders. Includes preview handler, property handler, context menu, and custom icons. | [README](7ZipShell/README.md) |
+| **TootelaUITools** | MFC-based UI application for screen capture and video recording. Uses TootegaWinLib for core utilities. | [README](TootelaUITools/README.md) |
 
 ---
 
@@ -54,11 +56,17 @@ Tools/
 ├── README.md                    # This file
 ├── TootegaWinTools.slnx         # Master solution (all projects)
 │
-├── TootegaWinLib/               # Core library (static lib)
+├── TootegaWinLib/               # Core library (static lib) - ACTIVE
 │   ├── README.md
 │   ├── TootegaWinLib.vcxproj
 │   ├── Include/                 # Public headers
 │   └── Source/                  # Implementation
+│
+├── ByTokenCommon/               # Legacy compatibility layer - DEPRECATED
+│   ├── README.md
+│   ├── ByTokenCommon.vcxproj    # Header-only wrapper
+│   └── Include/
+│       └── ByTokenCommon.h      # Includes TootegaWinLib + compatibility macros
 │
 ├── 7ZipShell/                   # Shell extension for 7z archives
 │   ├── README.md
@@ -66,6 +74,13 @@ Tools/
 │   ├── SevenZipView/            # DLL project
 │   ├── Installer/               # Setup executable
 │   └── ...
+│
+├── TootelaUITools/              # MFC UI application
+│   ├── README.md
+│   ├── TootelaUITools.vcxproj
+│   ├── Include/                 # Application headers
+│   ├── Source/                  # Application source
+│   └── Resource/                # MFC resources
 │
 └── x64/                         # Build output
     ├── Release/

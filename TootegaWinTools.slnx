@@ -2,10 +2,23 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/TootegaVideoTool/">
+    <Project Path="TootegaVideoTool/TootegaVideoTool.vcxproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+      <BuildDependency Project="TootegaWinMFCLib/TootegaWinMFCLib.vcxproj" />
+      <BuildDependency Project="TootegaWinLib/TootegaWinLib.vcxproj" />
+    </Project>
+  </Folder>
 
-  <!-- TootegaWinLib - Shared Static Library -->
+  <!-- TootegaWinLib - Shared Static Library (Win32 Pure) -->
   <Folder Name="/TootegaWinLib/">
     <Project Path="TootegaWinLib/TootegaWinLib.vcxproj" Id="f2e7a8b9-3c4d-5e6f-a1b2-c3d4e5f60718" />
+  </Folder>
+
+  <!-- TootegaWinMFCLib - MFC Static Library -->
+  <Folder Name="/TootegaWinMFCLib/">
+    <Project Path="TootegaWinMFCLib/TootegaWinMFCLib.vcxproj" Id="b3c4d5e6-f7a8-9012-bcde-f12345678901">
+      <BuildDependency Project="TootegaWinLib/TootegaWinLib.vcxproj" />
+    </Project>
   </Folder>
 
   <!-- 7ZipShell - Shell Extension for 7z Archives -->

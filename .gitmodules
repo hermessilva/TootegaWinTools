@@ -4,3 +4,9 @@
 [submodule "TootegaWinLib"]
 	path = TootegaWinLib
 	url = https://github.com/HermesSilva/TootegaWinLib.git
+[submodule "TootegaWinMFCLib"]
+	path = TootegaWinMFCLib
+	url = https://github.com/HermesSilva/TootegaWinMFCLib.git
+[submodule "TootegaVideoTool"]
+	path = TootegaVideoTool
+	url = https://github.com/HermesSilva/TootegaVideoTool.git
