@@ -339,6 +339,27 @@ bool Database::Open(const std::wstring& path, bool /*readOnly*/) {
 void Database::Close() {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (hdbc_) {
+        // Detach da base anexada para LIBERAR o .mdf/.ldf. Sem isso a LocalDB mantem
+        // o arquivo anexado (e travado) apos o disconnect. Roda em master e engole
+        // erros (ex.: outra conexao ainda usa a base -> sera detachada quando ela sair).
+        if (!databaseName_.empty()) {
+            std::wstring esc;
+            for (wchar_t c : databaseName_) {
+                if (c == L'\'') esc += L"''";
+                else esc += c;
+            }
+            std::wstring sql =
+                L"USE [master]; BEGIN TRY EXEC sp_detach_db @dbname = N'" + esc +
+                L"', @skipchecks = 'true'; END TRY BEGIN CATCH END CATCH;";
+
+            SQLHANDLE hstmt = nullptr;
+            if (SQL_SUCCEEDED(SQLAllocHandle(SQL_HANDLE_STMT, hdbc_, &hstmt))) {
+                SQLExecDirectW(hstmt,
+                    reinterpret_cast<SQLWCHAR*>(const_cast<wchar_t*>(sql.c_str())), SQL_NTS);
+                SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+            }
+        }
+
         SQLDisconnect(hdbc_);
         SQLFreeHandle(SQL_HANDLE_DBC, hdbc_);
         hdbc_ = nullptr;
@@ -897,32 +918,85 @@ DatabasePool& DatabasePool::Instance() {
     return instance;
 }
 
+DatabasePool::~DatabasePool() {
+    Clear();
+}
+
 std::shared_ptr<Database> DatabasePool::GetDatabase(const std::wstring& path) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     auto it = cache_.find(path);
     if (it != cache_.end()) {
-        if (it->second && it->second->IsOpen())
-            return it->second;
+        if (it->second.db && it->second.db->IsOpen()) {
+            it->second.lastUse = std::chrono::steady_clock::now();
+            return it->second.db;
+        }
         cache_.erase(it);
     }
 
     auto db = std::make_shared<Database>();
-    if (db->Open(path, true)) {
-        cache_[path] = db;
-        return db;
-    }
+    if (!db->Open(path, true))
+        return nullptr;
 
-    return nullptr;
+    cache_[path] = Entry{ db, std::chrono::steady_clock::now() };
+    EnsureTimer();
+    return db;
+}
+
+void DatabasePool::EnsureTimer() {
+    // mutex_ ja detido pelo chamador.
+    if (timer_) return;
+    if (!timerQueue_) timerQueue_ = CreateTimerQueue();
+    if (timerQueue_)
+        CreateTimerQueueTimer(&timer_, timerQueue_, SweepThunk, this,
+            3000, 3000, WT_EXECUTEDEFAULT);
+}
+
+void CALLBACK DatabasePool::SweepThunk(PVOID param, BOOLEAN) {
+    reinterpret_cast<DatabasePool*>(param)->Sweep();
+}
+
+void DatabasePool::Sweep() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto now = std::chrono::steady_clock::now();
+    for (auto it = cache_.begin(); it != cache_.end(); ) {
+        // use_count()==1 => somente o pool referencia => ninguem navegando o .mdf.
+        // Idle curto evita detach se o usuario voltar logo em seguida.
+        bool idle = (now - it->second.lastUse) > std::chrono::seconds(5);
+        if (it->second.db && it->second.db.use_count() == 1 && idle) {
+            it->second.db->Close();   // detach (libera mdf/ldf) + disconnect
+            it = cache_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void DatabasePool::ReleaseDatabase(const std::wstring& path) {
     std::lock_guard<std::mutex> lock(mutex_);
-    cache_.erase(path);
+    auto it = cache_.find(path);
+    if (it != cache_.end()) {
+        if (it->second.db) it->second.db->Close();
+        cache_.erase(it);
+    }
 }
 
 void DatabasePool::Clear() {
+    // Destruir a fila de timers de forma NAO-BLOQUEANTE (CompletionEvent=NULL): evita
+    // esperar callbacks e possivel deadlock com o loader lock ao descarregar a DLL.
+    // A pool e um singleton estatico, entao 'this' permanece valido para callbacks tardias.
+    HANDLE tq;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        tq = timerQueue_;
+        timerQueue_ = nullptr;
+        timer_ = nullptr;
+    }
+    if (tq) DeleteTimerQueueEx(tq, nullptr);
+
     std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& kv : cache_)
+        if (kv.second.db) kv.second.db->Close();
     cache_.clear();
 }
 

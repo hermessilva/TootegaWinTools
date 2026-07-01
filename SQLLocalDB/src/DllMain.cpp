@@ -48,6 +48,27 @@ const wchar_t* g_SupportedExtensions[] = {
     L".mdf"
 };
 
+// Processo elevado (admin)? Instaladores rodam elevados e devem registrar
+// machine-wide (HKLM); regsvr32 comum (dev, sem admin) registra por-usuario (HKCU).
+static bool IsProcessElevated() {
+    bool elevated = false;
+    HANDLE hToken = nullptr;
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        TOKEN_ELEVATION te;
+        DWORD sz = sizeof(te);
+        if (GetTokenInformation(hToken, TokenElevation, &te, sizeof(te), &sz))
+            elevated = te.TokenIsElevated != 0;
+        CloseHandle(hToken);
+    }
+    return elevated;
+}
+
+// Raiz de registro: HKLM (todos os usuarios) se elevado, senao HKCU (por-usuario).
+// Ambos os caminhos usam a subarvore "Software\Classes\...".
+static HKEY RegistrationRoot() {
+    return IsProcessElevated() ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+}
+
 // DLL Entry Point
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     switch (ul_reason_for_call) {
@@ -195,6 +216,10 @@ STDAPI DllRegisterServer() {
 
     SQLLOCALDB_LOG(L"Module path: %s", modulePath);
 
+    // HKLM se elevado (instalador), senao HKCU (regsvr32 por-usuario).
+    HKEY root = RegistrationRoot();
+    SQLLOCALDB_LOG(L"Registration root: %s", (root == HKEY_LOCAL_MACHINE) ? L"HKLM" : L"HKCU");
+
     // Atributos SFGAO iguais ao CompressedFolder (zipfldr.dll): navegavel como pasta.
     DWORD dwFolderAttributes = 0x200001a0;
 
@@ -231,39 +256,39 @@ STDAPI DllRegisterServer() {
 
     REGISTRY_ENTRY rgRegEntries[] = {
         // Shell Folder CLSID
-        { HKEY_CURRENT_USER, szFolderKey, nullptr, REG_SZ, L"SQLLocalDBView Database Browser", 0 },
-        { HKEY_CURRENT_USER, szFolderInProcKey, nullptr, REG_SZ, L"%s", 0 },
-        { HKEY_CURRENT_USER, szFolderInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
-        { HKEY_CURRENT_USER, szFolderShellFolderKey, L"Attributes", REG_DWORD, nullptr, dwFolderAttributes },
-        { HKEY_CURRENT_USER, szFolderShellFolderKey, L"UseDropHandler", REG_SZ, L"", 0 },
-        { HKEY_CURRENT_USER, szFolderDefaultIconKey, nullptr, REG_SZ, szIconPath, 0 },
-        { HKEY_CURRENT_USER, szFolderProgIdKey, nullptr, REG_SZ, L"SQLLocalDBView.Database", 0 },
-        { HKEY_CURRENT_USER, szFolderCategoryKey, nullptr, REG_SZ, nullptr, 0 },
+        { root, szFolderKey, nullptr, REG_SZ, L"SQLLocalDBView Database Browser", 0 },
+        { root, szFolderInProcKey, nullptr, REG_SZ, L"%s", 0 },
+        { root, szFolderInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
+        { root, szFolderShellFolderKey, L"Attributes", REG_DWORD, nullptr, dwFolderAttributes },
+        { root, szFolderShellFolderKey, L"UseDropHandler", REG_SZ, L"", 0 },
+        { root, szFolderDefaultIconKey, nullptr, REG_SZ, szIconPath, 0 },
+        { root, szFolderProgIdKey, nullptr, REG_SZ, L"SQLLocalDBView.Database", 0 },
+        { root, szFolderCategoryKey, nullptr, REG_SZ, nullptr, 0 },
 
         // Preview Handler CLSID
-        { HKEY_CURRENT_USER, szPreviewKey, nullptr, REG_SZ, L"SQLLocalDBView Preview Handler", 0 },
-        { HKEY_CURRENT_USER, szPreviewInProcKey, nullptr, REG_SZ, L"%s", 0 },
-        { HKEY_CURRENT_USER, szPreviewInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
-        { HKEY_CURRENT_USER, szPreviewKey, L"AppId", REG_SZ, L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}", 0 },
+        { root, szPreviewKey, nullptr, REG_SZ, L"SQLLocalDBView Preview Handler", 0 },
+        { root, szPreviewInProcKey, nullptr, REG_SZ, L"%s", 0 },
+        { root, szPreviewInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
+        { root, szPreviewKey, L"AppId", REG_SZ, L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}", 0 },
 
         // Context Menu Handler CLSID
-        { HKEY_CURRENT_USER, szContextMenuKey, nullptr, REG_SZ, L"SQLLocalDBView Context Menu", 0 },
-        { HKEY_CURRENT_USER, szContextMenuInProcKey, nullptr, REG_SZ, L"%s", 0 },
-        { HKEY_CURRENT_USER, szContextMenuInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
+        { root, szContextMenuKey, nullptr, REG_SZ, L"SQLLocalDBView Context Menu", 0 },
+        { root, szContextMenuInProcKey, nullptr, REG_SZ, L"%s", 0 },
+        { root, szContextMenuInProcKey, L"ThreadingModel", REG_SZ, L"Apartment", 0 },
 
         // Property Handler CLSID
-        { HKEY_CURRENT_USER, szPropertyKey, nullptr, REG_SZ, L"SQLLocalDBView Property Handler", 0 },
-        { HKEY_CURRENT_USER, szPropertyInProcKey, nullptr, REG_SZ, L"%s", 0 },
-        { HKEY_CURRENT_USER, szPropertyInProcKey, L"ThreadingModel", REG_SZ, L"Both", 0 },
+        { root, szPropertyKey, nullptr, REG_SZ, L"SQLLocalDBView Property Handler", 0 },
+        { root, szPropertyInProcKey, nullptr, REG_SZ, L"%s", 0 },
+        { root, szPropertyInProcKey, L"ThreadingModel", REG_SZ, L"Both", 0 },
 
         // ProgId registration
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database", nullptr, REG_SZ, L"SQL Server LocalDB Database", 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database", L"FriendlyTypeName", REG_SZ, L"SQL Server LocalDB Database", 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database\\CLSID", nullptr, REG_SZ, szFolderCLSID, 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database\\DefaultIcon", nullptr, REG_SZ, szIconPath, 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open", nullptr, REG_SZ, L"Open", 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open\\Command", nullptr, REG_EXPAND_SZ, L"%SystemRoot%\\Explorer.exe /idlist,%I,%L", 0 },
-        { HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open\\Command", L"DelegateExecute", REG_SZ, L"{11dbb47c-a525-400b-9e80-a54615a090c0}", 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database", nullptr, REG_SZ, L"SQL Server LocalDB Database", 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database", L"FriendlyTypeName", REG_SZ, L"SQL Server LocalDB Database", 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database\\CLSID", nullptr, REG_SZ, szFolderCLSID, 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database\\DefaultIcon", nullptr, REG_SZ, szIconPath, 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open", nullptr, REG_SZ, L"Open", 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open\\Command", nullptr, REG_EXPAND_SZ, L"%SystemRoot%\\Explorer.exe /idlist,%I,%L", 0 },
+        { root, L"Software\\Classes\\SQLLocalDBView.Database\\Shell\\Open\\Command", L"DelegateExecute", REG_SZ, L"{11dbb47c-a525-400b-9e80-a54615a090c0}", 0 },
     };
 
     SQLLOCALDB_LOG(L"--- Registering CLSID and ProgId entries ---");
@@ -283,17 +308,17 @@ STDAPI DllRegisterServer() {
     wchar_t szProgIdShellEx[256];
 
     StringCchPrintfW(szProgIdShellEx, 256, L"Software\\Classes\\SQLLocalDBView.Database\\ShellEx\\{8895b1c6-b41f-4c1c-a562-0d564250836f}");
-    REGISTRY_ENTRY previewEntry = { HKEY_CURRENT_USER, szProgIdShellEx, nullptr, REG_SZ, szPreviewCLSID, 0 };
+    REGISTRY_ENTRY previewEntry = { root, szProgIdShellEx, nullptr, REG_SZ, szPreviewCLSID, 0 };
     hr = CreateRegKeyAndSetValue(&previewEntry, modulePath);
     if (FAILED(hr)) return hr;
 
     StringCchPrintfW(szProgIdShellEx, 256, L"Software\\Classes\\SQLLocalDBView.Database\\ShellEx\\ContextMenuHandlers\\SQLLocalDBView");
-    REGISTRY_ENTRY ctxEntry = { HKEY_CURRENT_USER, szProgIdShellEx, nullptr, REG_SZ, szContextMenuCLSID, 0 };
+    REGISTRY_ENTRY ctxEntry = { root, szProgIdShellEx, nullptr, REG_SZ, szContextMenuCLSID, 0 };
     hr = CreateRegKeyAndSetValue(&ctxEntry, modulePath);
     if (FAILED(hr)) return hr;
 
     StringCchPrintfW(szProgIdShellEx, 256, L"Software\\Classes\\SQLLocalDBView.Database\\ShellEx\\{D5CDD505-2E9C-101B-9397-08002B2CF9AE}");
-    REGISTRY_ENTRY propEntry = { HKEY_CURRENT_USER, szProgIdShellEx, nullptr, REG_SZ, szPropertyCLSID, 0 };
+    REGISTRY_ENTRY propEntry = { root, szProgIdShellEx, nullptr, REG_SZ, szPropertyCLSID, 0 };
     hr = CreateRegKeyAndSetValue(&propEntry, modulePath);
     if (FAILED(hr)) return hr;
 
@@ -307,9 +332,9 @@ STDAPI DllRegisterServer() {
         StringCchPrintfW(szExtKey, 64, L"Software\\Classes\\%s", ext);
 
         REGISTRY_ENTRY extEntries[] = {
-            { HKEY_CURRENT_USER, szExtKey, nullptr, REG_SZ, L"SQLLocalDBView.Database", 0 },
-            { HKEY_CURRENT_USER, szExtKey, L"Content Type", REG_SZ, L"application/x-sqlserver-mdf", 0 },
-            { HKEY_CURRENT_USER, szExtKey, L"PerceivedType", REG_SZ, L"compressed", 0 },
+            { root, szExtKey, nullptr, REG_SZ, L"SQLLocalDBView.Database", 0 },
+            { root, szExtKey, L"Content Type", REG_SZ, L"application/x-sqlserver-mdf", 0 },
+            { root, szExtKey, L"PerceivedType", REG_SZ, L"compressed", 0 },
         };
 
         for (int i = 0; SUCCEEDED(hr) && (i < ARRAYSIZE(extEntries)); i++) {
@@ -319,28 +344,28 @@ STDAPI DllRegisterServer() {
 
         wchar_t szExtProgIdKey[128];
         StringCchPrintfW(szExtProgIdKey, 128, L"Software\\Classes\\%s\\SQLLocalDBView.Database", ext);
-        REGISTRY_ENTRY extProgIdKeyEntry = { HKEY_CURRENT_USER, szExtProgIdKey, nullptr, REG_SZ, nullptr, 0 };
+        REGISTRY_ENTRY extProgIdKeyEntry = { root, szExtProgIdKey, nullptr, REG_SZ, nullptr, 0 };
         hr = CreateRegKeyAndSetValue(&extProgIdKeyEntry, modulePath);
         if (FAILED(hr)) return hr;
 
         wchar_t szOpenWithKey[128];
         StringCchPrintfW(szOpenWithKey, 128, L"Software\\Classes\\%s\\OpenWithProgids", ext);
-        REGISTRY_ENTRY openWithEntry = { HKEY_CURRENT_USER, szOpenWithKey, L"SQLLocalDBView.Database", REG_SZ, L"", 0 };
+        REGISTRY_ENTRY openWithEntry = { root, szOpenWithKey, L"SQLLocalDBView.Database", REG_SZ, L"", 0 };
         hr = CreateRegKeyAndSetValue(&openWithEntry, modulePath);
         if (FAILED(hr)) return hr;
 
         StringCchPrintfW(szExtShellExKey, 256, L"Software\\Classes\\%s\\ShellEx\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", ext);
-        REGISTRY_ENTRY extPreviewEntry = { HKEY_CURRENT_USER, szExtShellExKey, nullptr, REG_SZ, szPreviewCLSID, 0 };
+        REGISTRY_ENTRY extPreviewEntry = { root, szExtShellExKey, nullptr, REG_SZ, szPreviewCLSID, 0 };
         hr = CreateRegKeyAndSetValue(&extPreviewEntry, modulePath);
         if (FAILED(hr)) return hr;
 
         StringCchPrintfW(szExtShellExKey, 256, L"Software\\Classes\\%s\\ShellEx\\ContextMenuHandlers\\SQLLocalDBView", ext);
-        REGISTRY_ENTRY extCtxEntry = { HKEY_CURRENT_USER, szExtShellExKey, nullptr, REG_SZ, szContextMenuCLSID, 0 };
+        REGISTRY_ENTRY extCtxEntry = { root, szExtShellExKey, nullptr, REG_SZ, szContextMenuCLSID, 0 };
         hr = CreateRegKeyAndSetValue(&extCtxEntry, modulePath);
         if (FAILED(hr)) return hr;
 
         StringCchPrintfW(szExtShellExKey, 256, L"Software\\Classes\\%s\\ShellEx\\{D5CDD505-2E9C-101B-9397-08002B2CF9AE}", ext);
-        REGISTRY_ENTRY extPropEntry = { HKEY_CURRENT_USER, szExtShellExKey, nullptr, REG_SZ, szPropertyCLSID, 0 };
+        REGISTRY_ENTRY extPropEntry = { root, szExtShellExKey, nullptr, REG_SZ, szPropertyCLSID, 0 };
         hr = CreateRegKeyAndSetValue(&extPropEntry, modulePath);
         if (FAILED(hr)) return hr;
     }
@@ -407,15 +432,42 @@ STDAPI DllUnregisterServer() {
 
     wchar_t key[256];
 
-    StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szFolderCLSID);
-    DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, key);
-    StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szPreviewCLSID);
-    DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, key);
-    StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szContextMenuCLSID);
-    DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, key);
-    StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szPropertyCLSID);
-    DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, key);
+    // Limpar em AMBOS os hives (por-usuario e machine-wide), pois o registro pode
+    // ter sido feito por regsvr32 (HKCU) ou pelo instalador elevado (HKLM).
+    HKEY roots[] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
+    for (HKEY r : roots) {
+        StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szFolderCLSID);
+        DeleteRegistryKeyRecursive(r, key);
+        StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szPreviewCLSID);
+        DeleteRegistryKeyRecursive(r, key);
+        StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szContextMenuCLSID);
+        DeleteRegistryKeyRecursive(r, key);
+        StringCchPrintfW(key, 256, L"Software\\Classes\\CLSID\\%s", szPropertyCLSID);
+        DeleteRegistryKeyRecursive(r, key);
 
+        DeleteRegistryKeyRecursive(r, L"Software\\Classes\\SQLLocalDBView.Database");
+
+        for (const wchar_t* ext : g_SupportedExtensions) {
+            StringCchPrintfW(key, 256, L"Software\\Classes\\%s\\ShellEx", ext);
+            DeleteRegistryKeyRecursive(r, key);
+
+            HKEY hKey;
+            StringCchPrintfW(key, 256, L"Software\\Classes\\%s", ext);
+            if (RegOpenKeyExW(r, key, 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
+                wchar_t value[256] = {0};
+                DWORD size = sizeof(value);
+                if (RegQueryValueExW(hKey, nullptr, nullptr, nullptr, (LPBYTE)value, &size) == ERROR_SUCCESS) {
+                    if (wcscmp(value, L"SQLLocalDBView.Database") == 0)
+                        RegDeleteValueW(hKey, nullptr);
+                }
+                RegDeleteValueW(hKey, L"Content Type");
+                RegDeleteValueW(hKey, L"PerceivedType");
+                RegCloseKey(hKey);
+            }
+        }
+    }
+
+    // Fallback HKEY_CLASSES_ROOT (instalacoes antigas).
     StringCchPrintfW(key, 256, L"CLSID\\%s", szFolderCLSID);
     DeleteRegistryKeyRecursive(HKEY_CLASSES_ROOT, key);
     StringCchPrintfW(key, 256, L"CLSID\\%s", szPreviewCLSID);
@@ -424,28 +476,8 @@ STDAPI DllUnregisterServer() {
     DeleteRegistryKeyRecursive(HKEY_CLASSES_ROOT, key);
     StringCchPrintfW(key, 256, L"CLSID\\%s", szPropertyCLSID);
     DeleteRegistryKeyRecursive(HKEY_CLASSES_ROOT, key);
-
-    DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, L"Software\\Classes\\SQLLocalDBView.Database");
     DeleteRegistryKeyRecursive(HKEY_CLASSES_ROOT, L"SQLLocalDBView.Database");
-
     for (const wchar_t* ext : g_SupportedExtensions) {
-        StringCchPrintfW(key, 256, L"Software\\Classes\\%s\\ShellEx", ext);
-        DeleteRegistryKeyRecursive(HKEY_CURRENT_USER, key);
-
-        HKEY hKey;
-        StringCchPrintfW(key, 256, L"Software\\Classes\\%s", ext);
-        if (RegOpenKeyExW(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
-            wchar_t value[256] = {0};
-            DWORD size = sizeof(value);
-            if (RegQueryValueExW(hKey, nullptr, nullptr, nullptr, (LPBYTE)value, &size) == ERROR_SUCCESS) {
-                if (wcscmp(value, L"SQLLocalDBView.Database") == 0)
-                    RegDeleteValueW(hKey, nullptr);
-            }
-            RegDeleteValueW(hKey, L"Content Type");
-            RegDeleteValueW(hKey, L"PerceivedType");
-            RegCloseKey(hKey);
-        }
-
         StringCchPrintfW(key, 256, L"%s\\ShellEx", ext);
         DeleteRegistryKeyRecursive(HKEY_CLASSES_ROOT, key);
     }

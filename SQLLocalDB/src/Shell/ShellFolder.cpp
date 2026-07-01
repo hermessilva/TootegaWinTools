@@ -734,10 +734,10 @@ void ShellFolder::LoadTableData() const {
     if (tableDataLoaded_) return;
     tableDataLoaded_ = true;
     if (tableName_.empty() || dbPath_.empty()) return;
-    auto db = DatabasePool::Instance().GetDatabase(dbPath_);
-    if (!db) return;
+    tableDb_ = DatabasePool::Instance().GetDatabase(dbPath_);  // segura a conexao viva
+    if (!tableDb_) return;
     const int MAX_ROWS = 1000;
-    tableData_ = db->GetTableData(tableName_, 0, MAX_ROWS);
+    tableData_ = tableDb_->GetTableData(tableName_, 0, MAX_ROWS);
 }
 
 // Numero de colunas de detalhe: root = 4 (Name/Type/Rows/Columns);

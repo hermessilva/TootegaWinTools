@@ -156,6 +156,9 @@ private:
     // (SQL Server nao tem rowid): item->rowCount guarda o ordinal 1-based da linha.
     mutable bool tableDataLoaded_ = false;
     mutable QueryResult tableData_;
+    // Mantem a conexao viva enquanto esta view existir (pool usa weak_ptr; sem esta
+    // ref forte cada GetDetailsOf reconectaria/reanexaria o .mdf).
+    mutable std::shared_ptr<Database> tableDb_;
     void LoadTableData() const;
     UINT ColumnCount() const;  // Colunas de detalhe (root=4, tabela=colunas reais)
 };

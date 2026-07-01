@@ -272,15 +272,26 @@ bool ElevateAndRestart(int argc, wchar_t* argv[])
 
 bool IsInstalled()
 {
+    // Indicador REAL de instalacao: o CLSID do shell folder registrado (machine-wide
+    // em HKLM, ou per-user em HKCU), OU a entrada em Add/Remove. NAO usar presenca do
+    // arquivo em Program Files: um residuo faria o Setup achar que esta instalado.
+    static const wchar_t* CLSID_INPROC =
+        L"Software\\Classes\\CLSID\\{3F1A9C2E-7B4D-4E6A-9C11-2A5E8D3F7B10}\\InProcServer32";
+
     HKEY hKey;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, CLSID_INPROC, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        RegCloseKey(hKey);
+        return true;
+    }
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, CLSID_INPROC, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        RegCloseKey(hKey);
+        return true;
+    }
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, UNINSTALL_KEY, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
         RegCloseKey(hKey);
         return true;
     }
-
-    std::wstring installDir = GetInstallPath();
-    std::wstring dllPath = installDir + L"\\" + DLL_NAME;
-    return PathFileExistsW(dllPath.c_str()) != FALSE;
+    return false;
 }
 
 std::wstring GetInstallPath()

@@ -12,6 +12,7 @@
 
 #include "Common.h"
 #include <optional>
+#include <chrono>
 
 namespace SQLLocalDBView {
 
@@ -182,7 +183,10 @@ private:
     }
 };
 
-// Pool de conexoes para melhor performance
+// Pool de conexoes. Mantem referencia FORTE (conexao estavel durante a navegacao,
+// evitando attach/detach repetido que quebra a abertura). Um timer periodico detacha
+// e remove conexoes ociosas cujo use_count==1 (ou seja, apenas o pool referencia =>
+// ninguem esta navegando aquele .mdf), liberando mdf/ldf pouco depois de sair.
 class DatabasePool {
 public:
     static DatabasePool& Instance();
@@ -193,10 +197,21 @@ public:
 
 private:
     DatabasePool() = default;
+    ~DatabasePool();
+
+    struct Entry {
+        std::shared_ptr<Database> db;
+        std::chrono::steady_clock::time_point lastUse;
+    };
+
     std::mutex mutex_;
-    // Referencia forte: mantem a conexao/attach vivos entre navegacoes
-    // (evita re-attach lento do .mdf e conflito de "database ja anexado").
-    std::unordered_map<std::wstring, std::shared_ptr<Database>> cache_;
+    std::unordered_map<std::wstring, Entry> cache_;
+    HANDLE timerQueue_ = nullptr;
+    HANDLE timer_ = nullptr;
+
+    void EnsureTimer();
+    void Sweep();
+    static void CALLBACK SweepThunk(PVOID param, BOOLEAN);
 };
 
 } // namespace SQLLocalDBView
