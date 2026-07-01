@@ -1146,20 +1146,6 @@ void EnumIDList::Initialize() {
         SQLLOCALDB_LOG(L"EnumIDList::Initialize table '%s' -> %d rows, %d cols",
             tableName.c_str(), (int)result.rows.size(), (int)result.columnNames.size());
         if (result.error.empty() && !result.rows.empty()) {
-            // Determinar qual coluna usar para o nome de exibição.
-            // Preferir colunas como 'name', 'title', etc; senão a primeira coluna.
-            // SQL Server não possui rowid; usamos o ordinal da linha como identificador.
-            int displayColIndex = 0;
-            for (size_t i = 0; i < result.columnNames.size(); i++) {
-                std::wstring colLower = result.columnNames[i];
-                std::transform(colLower.begin(), colLower.end(), colLower.begin(), ::towlower);
-                if (colLower == L"name" || colLower == L"nome" || colLower == L"title" ||
-                    colLower == L"titulo" || colLower == L"descricao" || colLower == L"description") {
-                    displayColIndex = (int)i;
-                    break;
-                }
-            }
-
             for (size_t rowIdx = 0; rowIdx < result.rows.size(); rowIdx++) {
                 const auto& row = result.rows[rowIdx];
                 if (row.empty()) continue;
@@ -1167,27 +1153,13 @@ void EnumIDList::Initialize() {
                 // SQL Server não tem rowid: usar ordinal 1-based.
                 int64_t rowid = (int64_t)rowIdx + 1;
 
-                // Criar nome de exibição
+                // Nome do item = valor da 1a coluna (consistente com o header da
+                // coluna 0; costuma ser a PK/ID, unico por linha).
                 std::wstring displayName;
-                if (displayColIndex < (int)row.size()) {
-                    const auto& cell = row[displayColIndex];
-                    if (cell.type == CellValue::Type::Text) {
-                        displayName = cell.textValue;
-                    } else if (cell.type == CellValue::Type::Integer) {
-                        displayName = std::to_wstring(cell.intValue);
-                    } else if (cell.type == CellValue::Type::Real) {
-                        displayName = std::to_wstring(cell.realValue);
-                    } else if (cell.type == CellValue::Type::Null) {
-                        displayName = L"(null)";
-                    } else {
-                        displayName = L"(blob)";
-                    }
-                }
-                
-                // Truncar nome longo
-                if (displayName.length() > 80) {
+                if (!row[0].IsNull()) displayName = row[0].ToString();
+
+                if (displayName.length() > 80)
                     displayName = displayName.substr(0, 77) + L"...";
-                }
                 
                 // Nome da linha (coluna 0) = valor da coluna de exibicao.
                 wchar_t rowName[256];

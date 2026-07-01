@@ -146,6 +146,23 @@ static bool FetchBlob(SQLHSTMT h, SQLUSMALLINT col, std::vector<uint8_t>& out) {
     return false;
 }
 
+// Le uma coluna uniqueidentifier (SQL_C_GUID) e formata como string. Retorna true se NULL.
+static bool FetchGuid(SQLHSTMT h, SQLUSMALLINT col, std::wstring& out) {
+    out.clear();
+    SQLGUID g = {};
+    SQLLEN ind = 0;
+    SQLRETURN r = SQLGetData(h, col, SQL_C_GUID, &g, sizeof(g), &ind);
+    if (!SQL_SUCCEEDED(r) || ind == SQL_NULL_DATA) return true;
+    wchar_t buf[40];
+    StringCchPrintfW(buf, 40,
+        L"%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+        (unsigned long)g.Data1, (unsigned)g.Data2, (unsigned)g.Data3,
+        g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3],
+        g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+    out = buf;
+    return false;
+}
+
 // Monta um literal OBJECT_ID(N'schema.name') com aspas escapadas.
 static std::wstring ObjectIdLiteral(const std::wstring& display) {
     std::wstring q = display;
@@ -405,6 +422,7 @@ QueryResult Database::RunQuery(const std::wstring& sql, int maxRows, bool /*coun
 
     // Metadados de coluna + familia de tipo por coluna.
     std::vector<CellValue::Type> colCat(columnCount, CellValue::Type::Text);
+    std::vector<SQLSMALLINT> colType(columnCount, 0);
     for (SQLSMALLINT i = 1; i <= columnCount; i++) {
         SQLWCHAR name[256] = {};
         SQLSMALLINT nameLen = 0, dataType = 0, decimalDigits = 0, nullable = 0;
@@ -413,6 +431,7 @@ QueryResult Database::RunQuery(const std::wstring& sql, int maxRows, bool /*coun
         result.columnNames.push_back(nameLen > 0 ? std::wstring(reinterpret_cast<wchar_t*>(name), nameLen) : L"?");
         result.columnTypes.push_back(SqlTypeName(dataType));
         colCat[i - 1] = CategorizeType(dataType);
+        colType[i - 1] = dataType;
     }
 
     // Coletar linhas.
@@ -459,7 +478,12 @@ QueryResult Database::RunQuery(const std::wstring& sql, int maxRows, bool /*coun
                 }
                 default: {
                     std::wstring text;
-                    if (!FetchText(hstmt, i, text)) {
+                    // uniqueidentifier: ler como SQL_C_GUID (driver legado nao converte
+                    // bem para WCHAR) e formatar. Demais tipos: texto Unicode.
+                    bool isNull = (colType[i - 1] == SQL_GUID)
+                        ? FetchGuid(hstmt, i, text)
+                        : FetchText(hstmt, i, text);
+                    if (!isNull) {
                         cell.type = CellValue::Type::Text;
                         cell.textValue = std::move(text);
                     }
