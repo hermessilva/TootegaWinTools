@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SevenZipView Setup - Installer Project
-  Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
-  
-  This creates a standalone setup.exe that:
-  - Auto-detects install/uninstall mode
-  - Requests UAC elevation
-  - Registers/Unregisters the COM DLL
-  - Appears in Add/Remove Programs
+  SQLiteView - Windows Explorer Shell Extension
+  Copyright (c) 2024-2026 Tootega Pesquisa e Inovação
+  MIT License
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
@@ -20,61 +15,76 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3F}</ProjectGuid>
-    <RootNamespace>SevenZipViewSetup</RootNamespace>
+    <ProjectGuid>{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}</ProjectGuid>
+    <RootNamespace>SQLiteView</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>SevenZipViewSetup</ProjectName>
+    <ProjectName>SQLiteView</ProjectName>
   </PropertyGroup>
+
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
+
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+
   <PropertyGroup Label="UserMacros" />
-  <!-- Output Directories - same as main project -->
+
+  <!-- Output Directories -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
-    <TargetName>SevenZipViewSetup</TargetName>
-    <TargetExt>.exe</TargetExt>
+    <TargetName>SQLiteView</TargetName>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
-    <TargetName>SevenZipViewSetup</TargetName>
-    <TargetExt>.exe</TargetExt>
+    <TargetName>SQLiteView</TargetName>
+    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
+
   <!-- Debug Configuration -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PreBuildEvent>
+      <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(ProjectDir)DownloadSQLite.ps1"</Command>
+      <Message>Checking SQLite amalgamation...</Message>
+    </PreBuildEvent>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;SQLITEVIEW_EXPORTS;_WINDOWS;_USRDLL;WIN32_LEAN_AND_MEAN;NOMINMAX;SQLITE_THREADSAFE=1;SQLITE_ENABLE_COLUMN_METADATA;SQLITE_ENABLE_FTS5;SQLITE_ENABLE_JSON1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)sqlite;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -83,24 +93,27 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>shell32.lib;ole32.lib;user32.lib;advapi32.lib;shlwapi.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
-      <UACUIAccess>false</UACUIAccess>
+      <ModuleDefinitionFile>$(ProjectDir)SQLiteView.def</ModuleDefinitionFile>
+      <AdditionalDependencies>shlwapi.lib;ole32.lib;oleaut32.lib;uuid.lib;shell32.lib;propsys.lib;gdi32.lib;user32.lib;advapi32.lib;comctl32.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Manifest>
-      <EnableDPIAwareness>PerMonitorHighDPIAware</EnableDPIAwareness>
-    </Manifest>
   </ItemDefinitionGroup>
+
   <!-- Release Configuration -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PreBuildEvent>
+      <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(ProjectDir)DownloadSQLite.ps1"</Command>
+      <Message>Checking SQLite amalgamation...</Message>
+    </PreBuildEvent>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;SQLITEVIEW_EXPORTS;_WINDOWS;_USRDLL;WIN32_LEAN_AND_MEAN;NOMINMAX;SQLITE_THREADSAFE=1;SQLITE_ENABLE_COLUMN_METADATA;SQLITE_ENABLE_FTS5;SQLITE_ENABLE_JSON1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;$(ProjectDir)sqlite;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <Optimization>MaxSpeed</Optimization>
@@ -112,22 +125,61 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>shell32.lib;ole32.lib;user32.lib;advapi32.lib;shlwapi.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
-      <UACUIAccess>false</UACUIAccess>
+      <ModuleDefinitionFile>$(ProjectDir)SQLiteView.def</ModuleDefinitionFile>
+      <AdditionalDependencies>shlwapi.lib;ole32.lib;oleaut32.lib;uuid.lib;shell32.lib;propsys.lib;gdi32.lib;user32.lib;advapi32.lib;comctl32.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Manifest>
-      <EnableDPIAwareness>PerMonitorHighDPIAware</EnableDPIAwareness>
-    </Manifest>
   </ItemDefinitionGroup>
+
   <!-- Source Files -->
   <ItemGroup>
-    <ClCompile Include="Setup.cpp" />
+    <ClCompile Include="sqlite\sqlite3.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <ClCompile Include="src\DllMain.cpp" />
+    <ClCompile Include="src\Core\Database.cpp" />
+    <ClCompile Include="src\Shell\ShellFolder.cpp" />
+    <ClCompile Include="src\Preview\PreviewHandler.cpp" />
+    <ClCompile Include="src\ContextMenu\ContextMenu.cpp" />
+    <ClCompile Include="src\Property\PropertyHandler.cpp" />
+    <ClCompile Include="src\Icon\IconHandler.cpp" />
   </ItemGroup>
+
+  <!-- Header Files -->
+  <ItemGroup>
+    <ClInclude Include="sqlite\sqlite3.h" />
+    <ClInclude Include="include\Common.h" />
+    <ClInclude Include="include\Database.h" />
+    <ClInclude Include="include\ShellFolder.h" />
+    <ClInclude Include="include\PreviewHandler.h" />
+    <ClInclude Include="include\ContextMenu.h" />
+    <ClInclude Include="include\PropertyHandler.h" />
+    <ClInclude Include="include\IconHandler.h" />
+  </ItemGroup>
+
   <!-- Resource Files -->
   <ItemGroup>
-    <ResourceCompile Include="Setup.rc" />
+    <ResourceCompile Include="resources\SQLiteView.rc">
+      <AdditionalIncludeDirectories>$(ProjectDir)resources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemGroup>
+
+  <!-- Module Definition -->
+  <ItemGroup>
+    <None Include="SQLiteView.def" />
+  </ItemGroup>
+
+  <!-- Other Files -->
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="LICENSE" />
+    <None Include="Setup.ps1" />
+    <None Include="Build.ps1" />
+    <None Include="Install.ps1" />
+    <None Include="Uninstall.ps1" />
+    <None Include=".gitignore" />
+  </ItemGroup>
+
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

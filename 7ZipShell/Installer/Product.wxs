@@ -13,7 +13,7 @@
 <?define ProductName = "SevenZipView" ?>
 <?define ProductVersion = "1.0.0" ?>
 <?define ProductManufacturer = "Tootega Pesquisa e Inovacao" ?>
-<?define UpgradeCode = "7A8B9C0D-1E2F-4A5B-8C9D-0E1F2A3B4C5F" ?>
+<?define UpgradeCode = "CEC5FDE7-171F-48F8-9BCC-C784B44C12D7" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
