@@ -29,7 +29,6 @@
       <UniqueIdentifier>{E5F6A7B8-9C0D-1e2f-3A4B-5C6D7E8F9A0B}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
-
   <!-- SevenZipView Source Files -->
   <ItemGroup>
     <ClCompile Include="src\DllMain.cpp">
@@ -56,81 +55,77 @@
     <ClCompile Include="src\Shell\Extractor.cpp">
       <Filter>Source Files\Shell</Filter>
     </ClCompile>
+    <ClCompile Include="7zip-sdk\7zAlloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zArcIn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zBuf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zBuf2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zCrc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zCrcOpt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zDec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zFile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\7zStream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Bcj2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Bra.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Bra86.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\BraIA64.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\CpuArch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Delta.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Lzma2Dec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\LzmaDec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Ppmd7.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Ppmd7Dec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Sha256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Sha256Opt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\Aes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="7zip-sdk\AesOpt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
-
   <!-- 7-Zip SDK Source Files -->
-  <ItemGroup>
-    <ClCompile Include="..\..\7Zip\C\7zAlloc.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zArcIn.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zBuf.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zBuf2.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zCrc.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zCrcOpt.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zDec.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zFile.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\7zStream.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Bcj2.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Bra.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Bra86.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\BraIA64.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\CpuArch.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Delta.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Lzma2Dec.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\LzmaDec.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Ppmd7.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Ppmd7Dec.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Sha256.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Sha256Opt.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\Aes.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\7Zip\C\AesOpt.c">
-      <Filter>7-Zip SDK</Filter>
-    </ClCompile>
-  </ItemGroup>
-
   <!-- Header Files -->
   <ItemGroup>
     <ClInclude Include="include\Common.h">
@@ -160,53 +155,47 @@
     <ClInclude Include="include\Extractor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="7zip-sdk\7z.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\7zAlloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\7zBuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\7zCrc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\7zFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\7zTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\LzmaDec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\Lzma2Dec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7zip-sdk\Ppmd7.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
-
   <!-- 7-Zip SDK Headers -->
-  <ItemGroup>
-    <ClInclude Include="..\..\7Zip\C\7z.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\7zAlloc.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\7zBuf.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\7zCrc.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\7zFile.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\7zTypes.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\LzmaDec.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\Lzma2Dec.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\7Zip\C\Ppmd7.h">
-      <Filter>7-Zip SDK\Headers</Filter>
-    </ClInclude>
-  </ItemGroup>
-
   <!-- Resource Files -->
   <ItemGroup>
     <ResourceCompile Include="resources\SevenZipView.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
-
   <!-- Module Definition -->
   <ItemGroup>
     <None Include="SevenZipView.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
-
   <!-- Other Files -->
   <ItemGroup>
     <None Include="README.md" />

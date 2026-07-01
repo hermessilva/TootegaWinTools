@@ -43,4 +43,12 @@
     </Project>
   </Folder>
 
+  <!-- SQLLocalDB - Shell Extension for SQL Server LocalDB (.mdf) -->
+  <Folder Name="/SQLLocalDB/">
+    <Project Path="SQLLocalDB/SQLLocalDBView.vcxproj" Id="c5d6e7f8-1a2b-4c3d-9e0f-1a2b3c4d5e6f" />
+    <Project Path="SQLLocalDB/Installer/SQLLocalDBViewSetup.vcxproj" Id="d6e7f8a9-2b3c-4d5e-af10-2b3c4d5e6f70">
+      <BuildDependency Project="SQLLocalDB/SQLLocalDBView.vcxproj" />
+    </Project>
+  </Folder>
+
 </Solution>

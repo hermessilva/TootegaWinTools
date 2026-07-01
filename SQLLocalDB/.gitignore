@@ -1,0 +1,46 @@
+# Build directories
+build/
+out/
+install/
+x64/
+Debug/
+Release/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Binary outputs
+*.dll
+*.lib
+*.pdb
+*.exp
+*.ilk
+*.obj
+*.o
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# IDE
+.idea/
+*.swp
+*~
+
+# OS files
+Thumbs.db
+.DS_Store

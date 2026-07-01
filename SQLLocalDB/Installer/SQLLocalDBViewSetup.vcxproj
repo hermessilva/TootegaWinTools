@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SevenZipView Setup - Installer Project
+  SQLLocalDBView Setup - Installer Project
   Copyright (c) 1999-2026 Tootega Pesquisa e Inovacao. MIT License.
-  
-  This creates a standalone setup.exe that:
+
+  Standalone setup.exe that:
   - Auto-detects install/uninstall mode
   - Requests UAC elevation
-  - Registers/Unregisters the COM DLL
+  - Registers/Unregisters the COM DLL (embedded as a resource)
   - Appears in Add/Remove Programs
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -23,10 +23,10 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3F}</ProjectGuid>
-    <RootNamespace>SevenZipViewSetup</RootNamespace>
+    <ProjectGuid>{D6E7F8A9-2B3C-4D5E-AF10-2B3C4D5E6F70}</ProjectGuid>
+    <RootNamespace>SQLLocalDBViewSetup</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>SevenZipViewSetup</ProjectName>
+    <ProjectName>SQLLocalDBViewSetup</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -58,13 +58,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
-    <TargetName>SevenZipViewSetup</TargetName>
+    <TargetName>SQLLocalDBViewSetup</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
-    <TargetName>SevenZipViewSetup</TargetName>
+    <TargetName>SQLLocalDBViewSetup</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <!-- Debug Configuration -->
@@ -127,6 +127,14 @@
   <!-- Resource Files -->
   <ItemGroup>
     <ResourceCompile Include="Setup.rc" />
+  </ItemGroup>
+  <!-- Build the shell DLL first (embedded as resource); build-order only, do not link -->
+  <ItemGroup>
+    <ProjectReference Include="..\SQLLocalDBView.vcxproj">
+      <Project>{C5D6E7F8-1A2B-4C3D-9E0F-1A2B3C4D5E6F}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
